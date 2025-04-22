@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HourFlow Premium - Complete Freelancer Suite</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- jsPDF library and plugins -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <h1>HourFlow</h1>
+                    <span class="premium-badge">Premium</span>
+                </div>
+                <button class="menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="#dashboard" class="nav-link active">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#time-tracker" class="nav-link">
+                            <i class="fas fa-clock"></i>
+                            <span>Time Tracker</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#clients" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Clients</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#projects" class="nav-link">
+                            <i class="fas fa-project-diagram"></i>
+                            <span>Projects</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#quotes" class="nav-link">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>Quotes</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#invoices" class="nav-link">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Invoices</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#settings" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="content-header">
+                    <div class="header-title">
+                        <h2>Dashboard</h2>
+                        <p>Overview of your freelance business</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Total Hours</h3>
+                            <p class="stat-value" id="total-hours">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Clients</h3>
+                            <p class="stat-value" id="total-clients">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Quotes</h3>
+                            <p class="stat-value" id="total-quotes">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Invoices</h3>
+                            <p class="stat-value" id="total-invoices">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Recent Time Entries</h3>
+                            <a href="#time-tracker" class="btn-link">View All</a>
+                        </div>
+                        <div class="card-body">
+                            <table class="table" id="recent-time-entries">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Project</th>
+                                        <th>Description</th>
+                                        <th>Hours</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Time entries will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Time Tracker Section -->
+            <section id="time-tracker" class="content-section">
+                <div class="content-header">
+                    <div class="header-title">
+                        <h2>Time Tracker</h2>
+                        <p>Record and manage your billable hours</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="add-time-entry-btn">Add Time Entry</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Add Time Entry</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="time-entry-form">
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="time-entry-project">Project</label>
+                                            <select class="form-control" id="time-entry-project" required>
+                                                <option value="">Select a project</option>
+                                                <!-- Projects will be populated here -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="time-entry-date">Date</label>
+                                            <input type="date" class="form-control" id="time-entry-date" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="time-entry-description">Description</label>
+                                    <input type="text" class="form-control" id="time-entry-description" placeholder="What did you work on?" required>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="time-entry-hours">Hours</label>
+                                            <input type="number" class="form-control" id="time-entry-hours" step="0.25" min="0.25" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="time-entry-billable">Billable</label>
+                                            <select class="form-control" id="time-entry-billable">
+                                                <option value="yes">Yes</option>
+                                                <option value="no">No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Save Time Entry</button>
+                                    <button type="button" id="cancel-time-entry" class="btn btn-secondary">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Time Entries</h3>
+                            <div>
+                                <button class="btn-icon" id="export-time-entries">
+                                    <i class="fas fa-file-export"></i>
+                                </button>
+                                <button class="btn-icon" id="clear-all-time-entries">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <table class="table" id="time-entries-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Project</th>
+                                        <th>Description</th>
+                                        <th>Hours</th>
+                                        <th>Billable</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Time entries will be populated here -->
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-right"><strong>Total Hours:</strong></td>
+                                        <td id="total-hours-cell">0</td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Clients Section -->
+            <section id="clients" class="content-section">
+                <div class="content-header">
+                    <div class="header-title">
+                        <h2>Clients</h2>
+                        <p>Manage your client information</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="add-client-btn">Add Client</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="card client-form" style="display: none;">
+                        <div class="card-header">
+                            <h3 class="card-title">Add Client</h3>
+                            <button class="btn-icon close-client-form">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <form id="client-form">
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="client-name">Client Name</label>
+                                            <input type="text" class="form-control" id="client-name" placeholder="Client or Company Name" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="client-contact">Contact Person</label>
+                                            <input type="text" class="form-control" id="client-contact" placeholder="Contact Person">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="client-email">Email</label>
+                                            <input type="email" class="form-control" id="client-email" placeholder="Email Address">
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="client-phone">Phone</label>
+                                            <input type="text" class="form-control" id="client-phone" placeholder="Phone Number">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="client-address">Address</label>
+                                    <textarea class="form-control" id="client-address" rows="3" placeholder="Client Address"></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Save Client</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Client List</h3>
+                            <button class="btn-icon" id="clear-all-clients">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table" id="clients-table">
+                                <thead>
+                                    <tr>
+                                        <th>Client Name</th>
+                                        <th>Contact</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Clients will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Projects Section -->
+            <section id="projects" class="content-section">
+                <div class="content-header">
+                    <div class="header-title">
+                        <h2>Projects</h2>
+                        <p>Manage your project information</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="add-project-btn">Add Project</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="card project-form" style="display: none;">
+                        <div class="card-header">
+                            <h3 class="card-title">Add Project</h3>
+                            <button class="btn-icon close-project-form">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <form id="project-form">
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="project-name">Project Name</label>
+                                            <input type="text" class="form-control" id="project-name" placeholder="Project Name" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="project-client">Client</label>
+                                            <select class="form-control" id="project-client" required>
+                                                <option value="">Select a client</option>
+                                                <!-- Clients will be populated here -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="project-rate">Hourly Rate ($)</label>
+                                            <input type="number" class="form-control" id="project-rate" step="0.01" min="0" placeholder="0.00">
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="project-status">Status</label>
+                                            <select class="form-control" id="project-status">
+                                                <option value="active">Active</option>
+                                                <option value="completed">Completed</option>
+                                                <option value="on-hold">On Hold</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="project-description">Description</label>
+                                    <textarea class="form-control" id="project-description" rows="3" placeholder="Project Description"></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Save Project</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Project List</h3>
+                            <button class="btn-icon" id="clear-all-projects">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table" id="projects-table">
+                                <thead>
+                                    <tr>
+                                        <th>Project Name</th>
+                                        <th>Client</th>
+                                        <th>Rate</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Projects will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Quotes Section -->
+            <section id="quotes" class="content-section">
+                <div class="content-header">
+                    <div class="header-title">
+                        <h2>Quote Generator</h2>
+                        <p>Create professional quotes for your clients</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="create-new-quote">Create New Quote</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="card quote-form" style="display: none;">
+                        <div class="card-header">
+                            <h3 class="card-title">Create Quote</h3>
+                            <button class="btn-icon close-quote-form">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <form id="quote-form">
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="quote-client-select">Client</label>
+                                            <select class="form-control" id="quote-client-select" required>
+                                                <option value="">Select a client</option>
+                                                <!-- Clients will be populated here -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="quote-project-title">Project Title</label>
+                                            <input type="text" class="form-control" id="quote-project-title" placeholder="Project Title" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="quote-number">Quote Number</label>
+                                            <input type="text" class="form-control" id="quote-number" placeholder="e.g. Q-2025-001" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="quote-date">Date</label>
+                                            <input type="date" class="form-control" id="quote-date" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="quote-valid-until">Valid Until</label>
+                                            <input type="date" class="form-control" id="quote-valid-until" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <h4>Your Business</h4>
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="quote-business-name">Business Name</label>
+                                            <input type="text" class="form-control" id="quote-business-name" placeholder="Your business name" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="quote-business-email">Business Email</label>
+                                            <input type="email" class="form-control" id="quote-business-email" placeholder="your@email.com" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="quote-business-address">Business Address</label>
+                                            <textarea class="form-control" id="quote-business-address" rows="3" placeholder="Your business address" required></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="quote-business-phone">Business Phone</label>
+                                            <input type="text" class="form-control" id="quote-business-phone" placeholder="Your phone number" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <h4>Quote Items</h4>
+                                <div id="quote-items">
+                                    <div class="quote-item">
+                                        <div class="form-row">
+                                            <div class="form-col grow">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="quote-item-desc-1">Description</label>
+                                                    <input type="text" class="form-control" id="quote-item-desc-1" placeholder="Item description" required>
+                                                </div>
+                                            </div>
+                                            <div class="form-col">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="quote-item-qty-1">Quantity</label>
+                                                    <input type="number" class="form-control" id="quote-item-qty-1" value="1" min="1" step="0.5" required>
+                                                </div>
+                                            </div>
+                                            <div class="form-col">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="quote-item-rate-1">Rate ($)</label>
+                                                    <input type="number" class="form-control" id="quote-item-rate-1" placeholder="0.00" step="0.01" min="0" required>
+                                                </div>
+                                            </div>
+                                            <div class="form-col amount">
+                                                <div class="form-group">
+                                                    <label class="form-label">Amount</label>
+                                                    <div class="amount-text">$0.00</div>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn-icon remove-quote-item" style="visibility: hidden;">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="quote-actions">
+                                    <button type="button" id="add-quote-item" class="btn btn-secondary">
+                                        <i class="fas fa-plus"></i> Add Item
+                                    </button>
+                                </div>
+                                
+                                <div class="quote-totals">
+                                    <div class="form-row">
+                                        <div class="form-col tax-rate">
+                                            <div class="form-group">
+                                                <label class="form-label" for="quote-tax-rate">Tax Rate (%)</label>
+                                                <input type="number" class="form-control" id="quote-tax-rate" value="0" min="0" max="100" step="0.1">
+                                            </div>
+                                        </div>
+                                        <div class="quote-totals-table">
+                                            <div class="totals-row">
+                                                <span>Subtotal:</span>
+                                                <span id="quote-subtotal">$0.00</span>
+                                            </div>
+                                            <div class="totals-row">
+                                                <span>Tax:</span>
+                                                <span id="quote-tax">$0.00</span>
+                                            </div>
+                                            <div class="totals-row total">
+                                                <span>Total:</span>
+                                                <span id="quote-total">$0.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label" for="quote-notes">Notes</label>
+                                    <textarea class="form-control" id="quote-notes" rows="3" placeholder="Additional notes to client"></textarea>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Save Quote</button>
+                                    <button type="button" id="generate-quote-pdf" class="btn btn-secondary">
+                                        <i class="fas fa-file-pdf"></i> Generate PDF
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Quotes</h3>
+                            <button class="btn-icon" id="clear-all-quotes">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table" id="quotes-table">
+                                <thead>
+                                    <tr>
+                                        <th>Quote #</th>
+                                        <th>Client</th>
+                                        <th>Date</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Quotes will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Invoices Section -->
+            <section id="invoices" class="content-section">
+                <div class="content-header">
+                    <div class="header-title">
+                        <h2>Invoice Generator</h2>
+                        <p>Create professional invoices for your clients</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="create-new-invoice">Create New Invoice</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="card invoice-form" style="display: none;">
+                        <div class="card-header">
+                            <h3 class="card-title">Create Invoice</h3>
+                            <button class="btn-icon close-invoice-form">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <form id="invoice-form">
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="invoice-client-select">Client</label>
+                                            <select class="form-control" id="invoice-client-select" required>
+                                                <option value="">Select a client</option>
+                                                <!-- Clients will be populated here -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="invoice-number">Invoice Number</label>
+                                            <input type="text" class="form-control" id="invoice-number" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="invoice-date">Date</label>
+                                            <input type="date" class="form-control" id="invoice-date" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="invoice-due-date">Due Date</label>
+                                            <input type="date" class="form-control" id="invoice-due-date" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="invoice-status">Status</label>
+                                            <select class="form-control" id="invoice-status">
+                                                <option value="draft">Draft</option>
+                                                <option value="pending">Pending</option>
+                                                <option value="paid">Paid</option>
+                                                <option value="overdue">Overdue</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="invoice-business-name">Business Name</label>
+                                            <input type="text" class="form-control" id="invoice-business-name" placeholder="Your business name" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="invoice-business-email">Business Email</label>
+                                            <input type="email" class="form-control" id="invoice-business-email" placeholder="your@email.com" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="invoice-business-address">Business Address</label>
+                                    <textarea class="form-control" id="invoice-business-address" rows="3" placeholder="Your business address" required></textarea>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="invoice-business-phone">Business Phone</label>
+                                            <input type="text" class="form-control" id="invoice-business-phone" placeholder="Your phone number" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="invoice-tax-rate">Tax Rate (%)</label>
+                                            <input type="number" class="form-control" id="invoice-tax-rate" min="0" step="0.01" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-secondary" id="invoice-from-time-entries">Add from Time Entries</button>
+                                </div>
+                                <h4>Invoice Items</h4>
+                                <div id="invoice-items">
+                                    <!-- Invoice items will be added here -->
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-secondary" id="add-invoice-item">Add Item</button>
+                                </div>
+                                <div class="invoice-totals">
+                                    <div class="form-row">
+                                        <div class="form-col tax-rate">
+                                            <div class="form-group">
+                                                <label class="form-label" for="invoice-tax-rate-display">Tax Rate (%)</label>
+                                                <input type="number" class="form-control" id="invoice-tax-rate-display" min="0" step="0.01" value="0" disabled>
+                                            </div>
+                                        </div>
+                                        <div class="form-col totals">
+                                            <div class="totals-row">
+                                                <span>Subtotal:</span>
+                                                <span id="invoice-subtotal">$0.00</span>
+                                            </div>
+                                            <div class="totals-row">
+                                                <span>Tax:</span>
+                                                <span id="invoice-tax">$0.00</span>
+                                            </div>
+                                            <div class="totals-row total">
+                                                <span>Total:</span>
+                                                <span id="invoice-total">$0.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="invoice-notes">Notes</label>
+                                    <textarea class="form-control" id="invoice-notes" rows="3" placeholder="Additional notes or payment instructions"></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-secondary" id="generate-invoice-pdf">Generate PDF</button>
+                                    <button type="submit" class="btn btn-primary">Save Invoice</button>
+                                    <button type="button" class="btn btn-link" id="cancel-invoice">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Invoices</h3>
+                            <button class="btn-icon" id="clear-all-invoices">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table" id="invoices-table">
+                                <thead>
+                                    <tr>
+                                        <th>Invoice #</th>
+                                        <th>Client</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Invoices will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Settings Section -->
+            <section id="settings" class="content-section">
+                <div class="content-header">
+                    <div class="header-title">
+                        <h2>Settings</h2>
+                        <p>Customize your HourFlow experience</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Business Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="business-info-form">
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="business-name">Business Name</label>
+                                            <input type="text" class="form-control" id="business-name" placeholder="Your business name">
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="business-email">Business Email</label>
+                                            <input type="email" class="form-control" id="business-email" placeholder="your@email.com">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="business-address">Business Address</label>
+                                    <textarea class="form-control" id="business-address" rows="3" placeholder="Your business address"></textarea>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="business-phone">Business Phone</label>
+                                            <input type="text" class="form-control" id="business-phone" placeholder="Your phone number">
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="default-hourly-rate">Default Hourly Rate ($)</label>
+                                            <input type="number" class="form-control" id="default-hourly-rate" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label class="form-label" for="default-tax-rate">Default Tax Rate (%)</label>
+                                            <input type="number" class="form-control" id="default-tax-rate" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Save Business Information</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">PDF Theme Settings</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">Color Theme</label>
+                                <div class="color-theme-selector">
+                                    <div class="color-theme-option" data-theme="blue">
+                                        <div class="color-preview" style="background-color: rgb(33, 150, 243);"></div>
+                                        <span>Blue</span>
+                                    </div>
+                                    <div class="color-theme-option" data-theme="green">
+                                        <div class="color-preview" style="background-color: rgb(76, 175, 80);"></div>
+                                        <span>Green</span>
+                                    </div>
+                                    <div class="color-theme-option" data-theme="gray">
+                                        <div class="color-preview" style="background-color: rgb(97, 97, 97);"></div>
+                                        <span>Gray</span>
+                                    </div>
+                                    <div class="color-theme-option" data-theme="teal">
+                                        <div class="color-preview" style="background-color: rgb(0, 150, 136);"></div>
+                                        <span>Teal</span>
+                                    </div>
+                                    <div class="color-theme-option" data-theme="amber">
+                                        <div class="color-preview" style="background-color: rgb(255, 152, 0);"></div>
+                                        <span>Amber</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="button" class="btn btn-primary" id="generate-sample-pdf">Generate Sample PDF</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+    
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+    <script src="js/time-tracker.js"></script>
+    <script src="js/clients.js"></script>
+    <script src="js/projects.js"></script>
+    <script src="js/quotes.js"></script>
+    <script src="js/invoices.js"></script>
+    <script src="js/pdf-generator.js"></script>
+    <script src="js/settings.js"></script>
+</body>
+</html>
