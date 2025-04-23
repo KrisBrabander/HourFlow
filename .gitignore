@@ -1,0 +1,17 @@
+# Systeembestanden
+.DS_Store
+Thumbs.db
+
+# Editor bestanden
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+npm-debug.log*
+
+# Tijdelijke bestanden
+.tmp
+.temp
