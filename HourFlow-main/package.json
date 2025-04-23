@@ -1,0 +1,20 @@
+{
+  "name": "hourflow-premium",
+  "version": "1.0.0",
+  "description": "Premium tijdregistratie applicatie voor freelancers",
+  "main": "index.js",
+  "scripts": {
+    "start": "serve ."
+  },
+  "keywords": [
+    "time-tracking",
+    "freelancer",
+    "invoicing",
+    "quotes"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "serve": "^14.0.0"
+  }
+}
