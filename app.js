@@ -53,8 +53,8 @@ const app = {
         const license = params.get("license") || localStorage.getItem("hourflow_license");
 
         if (!license) {
-            alert("No license key found. Please purchase at Gumroad.");
-            window.location.href = "https://gumroad.com/l/YOURPRODUCT";
+            console.log("No license key found. Redirecting to license page.");
+            window.location.href = "/license.html";
             return;
         }
 
@@ -82,16 +82,17 @@ const app = {
 
             if (!data.valid) {
                 console.log('License validation failed:', data);
-                alert("Invalid license key. Please purchase a valid license.");
-                window.location.href = "https://gumroad.com/l/YOURPRODUCT";
+                alert("Invalid license key. Please try again or purchase a valid license.");
+                window.location.href = "/license.html";
                 return;
             }
 
             localStorage.setItem("hourflow_license", license);
             console.log("✅ License validated. Access granted.");
         } catch (err) {
+            console.error("Error validating license:", err);
             alert("Error validating license. Please try again later.");
-            window.location.href = "https://gumroad.com/l/YOURPRODUCT";
+            window.location.href = "/license.html";
         }
     },
 
