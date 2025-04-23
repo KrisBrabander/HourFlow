@@ -36,6 +36,16 @@ const app = {
 
     // Validate license key via API
     validateLicense: async function() {
+        console.log("Starting license validation...");
+        
+        // Always check URL parameters first for a license key
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("license")) {
+            console.log("License key found in URL parameters");
+            // Store the license key from URL parameters
+            localStorage.setItem("hourflow_license", params.get("license"));
+        }
+        
         // Check for development mode
         const isDevelopmentMode = localStorage.getItem("devMode") === "true" || 
                                  window.location.hostname === "localhost" || 
@@ -49,14 +59,16 @@ const app = {
             return;
         }
         
-        const params = new URLSearchParams(window.location.search);
-        const license = params.get("license") || localStorage.getItem("hourflow_license");
+        // Get the license key from localStorage (we already handled URL params above)
+        const license = localStorage.getItem("hourflow_license");
 
         if (!license) {
             console.log("No license key found. Redirecting to license page.");
             window.location.href = "/license.html";
             return;
         }
+        
+        console.log("License key found in storage:", license);
 
         try {
             // Add a fallback mechanism to try both API endpoints
@@ -82,7 +94,8 @@ const app = {
 
             if (!data.valid) {
                 console.log('License validation failed:', data);
-                alert("Invalid license key. Please try again or purchase a valid license.");
+                // Don't show an alert, just redirect to license page
+                console.log("Redirecting to license page for re-validation");
                 window.location.href = "/license.html";
                 return;
             }
@@ -91,7 +104,8 @@ const app = {
             console.log("✅ License validated. Access granted.");
         } catch (err) {
             console.error("Error validating license:", err);
-            alert("Error validating license. Please try again later.");
+            // Don't show an alert, just redirect to license page
+            console.log("Redirecting to license page due to validation error");
             window.location.href = "/license.html";
         }
     },
