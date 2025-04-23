@@ -72,6 +72,17 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Check for redirect loop
+            const redirectCount = parseInt(sessionStorage.getItem('license_redirect_count') || '0');
+            if (redirectCount > 2) {
+                // Show a message about the issue
+                document.getElementById('error-message').textContent = 'Having trouble with license verification. Please try a test key: DEMO-KEY-1234';
+                document.getElementById('error-message').style.display = 'block';
+                // Reset counter to give a fresh start
+                sessionStorage.removeItem('license_redirect_count');
+                return;
+            }
+            
             // Check if user already has a valid license key in localStorage
             const storedKey = localStorage.getItem('hourflow_license');
             if (storedKey) {
@@ -119,6 +130,9 @@
                         if (!isAutoCheck) {
                             successMessage.style.display = 'block';
                         }
+                        
+                        // Reset redirect counter since we have a valid key
+                        sessionStorage.removeItem('license_redirect_count');
                         
                         // Redirect to the main application after a short delay
                         setTimeout(() => {
