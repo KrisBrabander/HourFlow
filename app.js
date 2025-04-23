@@ -36,6 +36,19 @@ const app = {
 
     // Validate license key via API
     validateLicense: async function() {
+        // Check for development mode
+        const isDevelopmentMode = localStorage.getItem("devMode") === "true" || 
+                                 window.location.hostname === "localhost" || 
+                                 window.location.hostname === "127.0.0.1";
+        
+        // Skip validation in development mode
+        if (isDevelopmentMode) {
+            console.log("Development mode active - license check bypassed");
+            // Set a temporary development license
+            localStorage.setItem("hourflow_license", "DEV-MODE-LICENSE");
+            return;
+        }
+        
         const params = new URLSearchParams(window.location.search);
         const license = params.get("license") || localStorage.getItem("hourflow_license");
 
