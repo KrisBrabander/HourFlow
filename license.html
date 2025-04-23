@@ -73,7 +73,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Check if user already has a valid license key in localStorage
-            const storedKey = localStorage.getItem('licenseKey');
+            const storedKey = localStorage.getItem('hourflow_license');
             if (storedKey) {
                 // Verify the stored key
                 verifyLicenseKey(storedKey, true);
@@ -114,7 +114,7 @@
                 .then(data => {
                     if (data.valid) {
                         // Store the valid license key
-                        localStorage.setItem('licenseKey', key);
+                        localStorage.setItem('hourflow_license', key);
                         
                         if (!isAutoCheck) {
                             successMessage.style.display = 'block';
