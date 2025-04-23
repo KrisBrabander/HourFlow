@@ -19,7 +19,14 @@ const app = {
 
     // Initialize app
     init: async function() {
-        await this.validateLicense();
+        // Check if we're coming from the license page to prevent redirect loops
+        const fromLicensePage = sessionStorage.getItem('from_license_page') === 'true';
+        sessionStorage.removeItem('from_license_page');
+        
+        // Skip license validation if we just came from the license page
+        if (!fromLicensePage) {
+            await this.validateLicense();
+        }
 
         // Initialize navigation
         this.initNavigation();
@@ -38,23 +45,11 @@ const app = {
     validateLicense: async function() {
         console.log("Starting license validation...");
         
-        // Check if we're in a redirect loop
-        const redirectCount = parseInt(sessionStorage.getItem('license_redirect_count') || '0');
-        if (redirectCount > 2) {
-            console.log("Detected redirect loop, bypassing license check");
-            // Reset counter and allow access to prevent endless loop
-            sessionStorage.removeItem('license_redirect_count');
-            return;
-        }
-        
-        // Always check URL parameters first for a license key
+        // Check for URL parameter license key
         const params = new URLSearchParams(window.location.search);
         if (params.get("license")) {
             console.log("License key found in URL parameters");
-            // Store the license key from URL parameters
             localStorage.setItem("hourflow_license", params.get("license"));
-            // Reset redirect counter since we have a new key
-            sessionStorage.removeItem('license_redirect_count');
         }
         
         // Check for development mode
@@ -62,69 +57,24 @@ const app = {
                                  window.location.hostname === "localhost" || 
                                  window.location.hostname === "127.0.0.1";
         
-        // Skip validation in development mode
         if (isDevelopmentMode) {
             console.log("Development mode active - license check bypassed");
-            // Set a temporary development license
-            localStorage.setItem("hourflow_license", "DEV-MODE-LICENSE");
-            return;
+            return true;
         }
         
-        // Get the license key from localStorage (we already handled URL params above)
+        // Get the license key from localStorage
         const license = localStorage.getItem("hourflow_license");
 
         if (!license) {
             console.log("No license key found. Redirecting to license page.");
-            // Increment redirect counter
-            sessionStorage.setItem('license_redirect_count', (redirectCount + 1).toString());
-            window.location.href = "/license.html";
-            return;
+            window.location.replace("/license.html");
+            return false;
         }
         
-        console.log("License key found in storage:", license);
-
-        try {
-            // Add a fallback mechanism to try both API endpoints
-            let response;
-            let data;
-            
-            try {
-                // First try the validate-license endpoint (GET request)
-                response = await fetch(`/api/validate-license?licenseKey=${license}`);
-                data = await response.json();
-            } catch (error) {
-                console.log('Trying fallback license verification method...');
-                // If that fails, try the verify-license endpoint (POST request)
-                response = await fetch('/api/verify-license', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ licenseKey: license })
-                });
-                data = await response.json();
-            }
-
-            if (!data.valid) {
-                console.log('License validation failed:', data);
-                // Don't show an alert, just redirect to license page
-                console.log("Redirecting to license page for re-validation");
-                // Increment redirect counter
-                sessionStorage.setItem('license_redirect_count', (redirectCount + 1).toString());
-                window.location.href = "/license.html";
-                return;
-            }
-
-            localStorage.setItem("hourflow_license", license);
-            console.log("✅ License validated. Access granted.");
-        } catch (err) {
-            console.error("Error validating license:", err);
-            // Don't show an alert, just redirect to license page
-            console.log("Redirecting to license page due to validation error");
-            // Increment redirect counter
-            sessionStorage.setItem('license_redirect_count', (redirectCount + 1).toString());
-            window.location.href = "/license.html";
-        }
+        // Simple verification - just check if the key exists
+        // This avoids API calls that might cause redirect loops
+        console.log("License key found, allowing access");
+        return true;
     },
 
     // Initialize navigation
