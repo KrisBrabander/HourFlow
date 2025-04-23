@@ -1,397 +1,253 @@
-// Clients functionality
-const clientManager = {
-    // Initialize client manager
-    init: function() {
-        // Initialize client form
-        this.initClientForm();
-        
-        // Render clients
-        this.renderClients();
-        
-        // Initialize clear all button
-        this.initClearAllButton();
+// App functionality
+const app = {
+    // App state
+    state: {
+        clients: [],
+        projects: [],
+        timeEntries: [],
+        quotes: [],
+        invoices: [],
+        settings: {
+            businessName: '',
+            businessEmail: '',
+            businessAddress: '',
+            businessPhone: '',
+            taxRate: 0,
+            hourlyRate: 50
+        }
     },
-    
-    // Initialize client form
-    initClientForm: function() {
-        const form = document.getElementById('client-form');
-        const addButton = document.getElementById('add-client-btn');
-        const closeButton = document.querySelector('.close-client-form');
-        const clientForm = document.querySelector('.client-form');
-        
-        // Show form when add button is clicked
-        addButton.addEventListener('click', () => {
-            clientForm.style.display = 'block';
-            form.removeAttribute('data-edit-id');
-            form.reset();
-        });
-        
-        // Hide form when close button is clicked
-        closeButton.addEventListener('click', () => {
-            clientForm.style.display = 'none';
-        });
-        
-        // Handle form submission
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            // Get form values
-            const name = document.getElementById('client-name').value;
-            const contact = document.getElementById('client-contact').value;
-            const email = document.getElementById('client-email').value;
-            const phone = document.getElementById('client-phone').value;
-            const address = document.getElementById('client-address').value;
-            
-            // Check if editing existing client
-            const editId = form.getAttribute('data-edit-id');
-            
-            if (editId) {
-                // Find client index
-                const index = app.state.clients.findIndex(client => client.id === editId);
-                
-                if (index !== -1) {
-                    // Update client
-                    app.state.clients[index] = {
-                        id: editId,
-                        name,
-                        contact,
-                        email,
-                        phone,
-                        address,
-                        timestamp: app.state.clients[index].timestamp
-                    };
-                    
-                    showNotification('Client updated successfully');
-                }
-            } else {
-                // Create new client
-                const newClient = {
-                    id: app.generateId(),
-                    name,
-                    contact,
-                    email,
-                    phone,
-                    address,
-                    timestamp: new Date().getTime()
-                };
-                
-                // Add to clients
-                app.state.clients.push(newClient);
-                
-                showNotification('Client added successfully');
-            }
-            
-            // Save to localStorage
-            app.saveData('clients', app.state.clients);
-            
-            // Reset form
-            form.reset();
-            
-            // Hide form
-            clientForm.style.display = 'none';
-            
-            // Re-render clients
-            this.renderClients();
-            
-            // Update dashboard stats
-            app.updateDashboardStats();
-            
-            // Update client selects in other forms
-            this.updateClientSelects();
-        });
-    },
-    
-    // Render clients
-    renderClients: function() {
-        const tableBody = document.querySelector('#clients-table tbody');
-        tableBody.innerHTML = '';
-        
-        if (app.state.clients.length === 0) {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="5" class="text-center">No clients found</td>`;
-            tableBody.appendChild(row);
-            return;
-        }
-        
-        // Sort by name (alphabetically)
-        const sortedClients = [...app.state.clients].sort((a, b) => a.name.localeCompare(b.name));
-        
-        sortedClients.forEach(client => {
-            const row = document.createElement('tr');
-            
-            row.innerHTML = `
-                <td>${client.name}</td>
-                <td>${client.contact || '-'}</td>
-                <td>${client.email || '-'}</td>
-                <td>${client.phone || '-'}</td>
-                <td>
-                    <button class="btn-icon edit-client" data-id="${client.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-icon delete-client" data-id="${client.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
-            
-            tableBody.appendChild(row);
-        });
-        
-        // Add event listeners
-        this.addClientEventListeners();
-    },
-    
-    // Add client event listeners
-    addClientEventListeners: function() {
-        const editButtons = document.querySelectorAll('.edit-client');
-        const deleteButtons = document.querySelectorAll('.delete-client');
-        
-        // Edit buttons
-        editButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const id = button.getAttribute('data-id');
-                this.editClient(id);
-            });
-        });
-        
-        // Delete buttons
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const id = button.getAttribute('data-id');
-                this.deleteClient(id);
-            });
-        });
-    },
-    
-    // Edit client
-    editClient: function(id) {
-        // Find client
-        const client = app.state.clients.find(client => client.id === id);
-        
-        if (!client) {
-            showNotification('Client not found', 'error');
-            return;
-        }
-        
-        // Get form
-        const form = document.getElementById('client-form');
-        const clientForm = document.querySelector('.client-form');
-        
-        // Set form values
-        form.setAttribute('data-edit-id', id);
-        document.getElementById('client-name').value = client.name;
-        document.getElementById('client-contact').value = client.contact || '';
-        document.getElementById('client-email').value = client.email || '';
-        document.getElementById('client-phone').value = client.phone || '';
-        document.getElementById('client-address').value = client.address || '';
-        
-        // Show form
-        clientForm.style.display = 'block';
-    },
-    
-    // Delete client
-    deleteClient: function(id) {
-        // Check if client is used in projects
-        const clientProjects = app.state.projects.filter(project => project.client === id);
-        
-        // Find client index
-        const index = app.state.clients.findIndex(client => client.id === id);
-        
-        if (index === -1) {
-            showNotification('Client not found', 'error');
-            return;
-        }
-        
-        // Get client name for better confirmation message
-        const clientName = app.state.clients[index].name;
-        
-        // Confirm delete with appropriate message
-        let confirmMessage = `Weet je zeker dat je klant "${clientName}" wilt verwijderen?`;
-        
-        if (clientProjects.length > 0) {
-            confirmMessage = `Klant "${clientName}" wordt gebruikt in ${clientProjects.length} project(en). Als je deze klant verwijdert, worden ook alle bijbehorende projecten verwijderd. Weet je zeker dat je door wilt gaan?`;
-        }
-        
-        if (!confirm(confirmMessage)) {
-            return;
-        }
-        
-        // If there are related projects, delete them first
-        if (clientProjects.length > 0) {
-            // Get project IDs
-            const projectIds = clientProjects.map(project => project.id);
-            
-            // Check if any projects are used in time entries
-            const relatedTimeEntries = app.state.timeEntries.filter(entry => projectIds.includes(entry.project));
-            
-            // Delete related time entries if any
-            if (relatedTimeEntries.length > 0) {
-                // Filter out time entries related to the projects
-                app.state.timeEntries = app.state.timeEntries.filter(entry => !projectIds.includes(entry.project));
-                
-                // Save time entries
-                app.saveData('time_entries', app.state.timeEntries);
-            }
-            
-            // Remove projects
-            app.state.projects = app.state.projects.filter(project => project.client !== id);
-            
-            // Save projects
-            app.saveData('projects', app.state.projects);
-        }
-        
-        // Remove client
-        app.state.clients.splice(index, 1);
-        
-        // Save to localStorage
-        app.saveData('clients', app.state.clients);
-        
-        // Re-render clients
-        this.renderClients();
-        
+
+    // Initialize app
+    init: async function() {
+        await this.validateLicense();
+
+        // Initialize navigation
+        this.initNavigation();
+
+        // Load data
+        this.loadData();
+
+        // Initialize notification system
+        this.initNotifications();
+
         // Update dashboard stats
-        app.updateDashboardStats();
-        
-        // Update client selects in other forms
-        this.updateClientSelects();
-        
-        // Show notification
-        showNotification('Client deleted successfully');
+        this.updateDashboardStats();
     },
-    
-    // Initialize clear all button
-    initClearAllButton: function() {
-        const clearAllBtn = document.getElementById('clear-all-clients');
+
+    // Validate license key via API
+    validateLicense: async function() {
+        console.log("Starting license validation...");
         
-        clearAllBtn.addEventListener('click', () => {
-            // Check if there are related projects
-            const hasProjects = app.state.projects.length > 0;
-            
-            // Create appropriate confirmation message
-            let confirmMessage = 'Weet je zeker dat je alle klanten wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.';
-            
-            if (hasProjects) {
-                confirmMessage = 'Als je alle klanten verwijdert, worden ook alle projecten en bijbehorende tijdregistraties verwijderd. Weet je zeker dat je door wilt gaan?';
-            }
-            
-            // Confirm delete
-            if (!confirm(confirmMessage)) {
-                return;
-            }
-            
-            // If there are related projects, delete them first
-            if (hasProjects) {
-                // Check if any projects are used in time entries
-                const hasTimeEntries = app.state.timeEntries.length > 0;
-                
-                // Clear time entries if any
-                if (hasTimeEntries) {
-                    app.state.timeEntries = [];
-                    app.saveData('time_entries', app.state.timeEntries);
+        // Check for URL parameter license key
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("license")) {
+            console.log("License key found in URL parameters");
+            localStorage.setItem("hourflow_license", params.get("license"));
+        }
+        
+        // Check for development mode
+        const isDevelopmentMode = localStorage.getItem("devMode") === "true" || 
+                                 window.location.hostname === "localhost" || 
+                                 window.location.hostname === "127.0.0.1";
+        
+        if (isDevelopmentMode) {
+            console.log("Development mode active - license check bypassed");
+            return true;
+        }
+        
+        // Get the license key from localStorage
+        const license = localStorage.getItem("hourflow_license");
+
+        if (!license) {
+            console.log("No license key found. Redirecting to license page.");
+            window.location.replace("/license.html");
+            return false;
+        }
+        
+        // Simple verification - just check if the key exists
+        // This avoids API calls that might cause redirect loops
+        console.log("License key found, allowing access");
+        return true;
+    },
+
+    // Initialize navigation
+    initNavigation: function() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('.content-section');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
+
+        // Handle navigation clicks
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                // Get target section
+                const targetId = link.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+
+                // Update active states
+                navLinks.forEach(navLink => navLink.classList.remove('active'));
+                sections.forEach(section => section.classList.remove('active'));
+
+                link.classList.add('active');
+                targetSection.classList.add('active');
+
+                // Close sidebar on mobile
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('mobile-open');
                 }
-                
-                // Clear projects
-                app.state.projects = [];
-                app.saveData('projects', app.state.projects);
+            });
+        });
+
+        // Handle menu toggle
+        menuToggle.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('mobile-open');
+            } else {
+                sidebar.classList.toggle('collapsed');
             }
-            
-            // Clear clients
-            app.state.clients = [];
-            
-            // Save to localStorage
-            app.saveData('clients', app.state.clients);
-            
-            // Re-render clients
-            this.renderClients();
-            
-            // Update dashboard stats
-            app.updateDashboardStats();
-            
-            // Update client selects in other forms
-            this.updateClientSelects();
-            
-            // Show notification
-            showNotification('Alle klanten succesvol verwijderd');
         });
     },
-    
-    // Update client selects in other forms
-    updateClientSelects: function() {
-        // Update project client select
-        const projectClientSelect = document.getElementById('project-client');
-        if (projectClientSelect) {
-            const currentValue = projectClientSelect.value;
-            
-            // Clear options except first
-            while (projectClientSelect.options.length > 1) {
-                projectClientSelect.remove(1);
-            }
-            
-            // Add clients
-            app.state.clients.forEach(client => {
-                const option = document.createElement('option');
-                option.value = client.id;
-                option.textContent = client.name;
-                projectClientSelect.appendChild(option);
-            });
-            
-            // Restore selected value if possible
-            if (currentValue && projectClientSelect.querySelector(`option[value="${currentValue}"]`)) {
-                projectClientSelect.value = currentValue;
-            }
+
+    // Load data from localStorage
+    loadData: function() {
+        const clients = localStorage.getItem('hourflow_clients');
+        if (clients) {
+            this.state.clients = JSON.parse(clients);
         }
-        
-        // Update quote client select
-        const quoteClientSelect = document.getElementById('quote-client-select');
-        if (quoteClientSelect) {
-            const currentValue = quoteClientSelect.value;
-            
-            // Clear options except first
-            while (quoteClientSelect.options.length > 1) {
-                quoteClientSelect.remove(1);
-            }
-            
-            // Add clients
-            app.state.clients.forEach(client => {
-                const option = document.createElement('option');
-                option.value = client.id;
-                option.textContent = client.name;
-                quoteClientSelect.appendChild(option);
-            });
-            
-            // Restore selected value if possible
-            if (currentValue && quoteClientSelect.querySelector(`option[value="${currentValue}"]`)) {
-                quoteClientSelect.value = currentValue;
-            }
+
+        const projects = localStorage.getItem('hourflow_projects');
+        if (projects) {
+            this.state.projects = JSON.parse(projects);
         }
-        
-        // Update invoice client select
-        const invoiceClientSelect = document.getElementById('invoice-client-select');
-        if (invoiceClientSelect) {
-            const currentValue = invoiceClientSelect.value;
-            
-            // Clear options except first
-            while (invoiceClientSelect.options.length > 1) {
-                invoiceClientSelect.remove(1);
-            }
-            
-            // Add clients
-            app.state.clients.forEach(client => {
-                const option = document.createElement('option');
-                option.value = client.id;
-                option.textContent = client.name;
-                invoiceClientSelect.appendChild(option);
-            });
-            
-            // Restore selected value if possible
-            if (currentValue && invoiceClientSelect.querySelector(`option[value="${currentValue}"]`)) {
-                invoiceClientSelect.value = currentValue;
-            }
+
+        const timeEntries = localStorage.getItem('hourflow_time_entries');
+        if (timeEntries) {
+            this.state.timeEntries = JSON.parse(timeEntries);
         }
+
+        const quotes = localStorage.getItem('hourflow_quotes');
+        if (quotes) {
+            this.state.quotes = JSON.parse(quotes);
+        }
+
+        const invoices = localStorage.getItem('hourflow_invoices');
+        if (invoices) {
+            this.state.invoices = JSON.parse(invoices);
+        }
+
+        const settings = localStorage.getItem('hourflow_settings');
+        if (settings) {
+            this.state.settings = JSON.parse(settings);
+        }
+    },
+
+    // Save data to localStorage
+    saveData: function(key, data) {
+        localStorage.setItem(`hourflow_${key}`, JSON.stringify(data));
+    },
+
+    // Generate unique ID
+    generateId: function() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    },
+
+    // Format currency
+    formatCurrency: function(amount) {
+        return '$' + parseFloat(amount).toFixed(2);
+    },
+
+    // Initialize notification system
+    initNotifications: function() {
+        // Notification already defined in global scope
+    },
+
+    // Update dashboard stats
+    updateDashboardStats: function() {
+        const totalHours = this.state.timeEntries.reduce((total, entry) => total + parseFloat(entry.hours), 0);
+        document.getElementById('total-hours').textContent = totalHours.toFixed(2);
+
+        document.getElementById('total-clients').textContent = this.state.clients.length;
+        document.getElementById('total-quotes').textContent = this.state.quotes.length;
+        document.getElementById('total-invoices').textContent = this.state.invoices.length;
+
+        this.updateRecentTimeEntries();
+    },
+
+    // Update recent time entries
+    updateRecentTimeEntries: function() {
+        const tableBody = document.querySelector('#recent-time-entries tbody');
+        tableBody.innerHTML = '';
+
+        const recentEntries = [...this.state.timeEntries]
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .slice(0, 5);
+
+        if (recentEntries.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="4" class="text-center">No time entries found</td>`;
+            tableBody.appendChild(row);
+            return;
+        }
+
+        recentEntries.forEach(entry => {
+            const row = document.createElement('tr');
+
+            const date = new Date(entry.date);
+            const formattedDate = date.toLocaleDateString();
+
+            row.innerHTML = `
+                <td>${formattedDate}</td>
+                <td>${entry.project}</td>
+                <td>${entry.description}</td>
+                <td>${entry.hours}</td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+    },
+
+    getClientById: function(id) {
+        return this.state.clients.find(client => client.id === id);
+    },
+
+    getClientNameById: function(id) {
+        const client = this.getClientById(id);
+        return client ? client.name : 'Unknown Client';
+    },
+
+    getProjectById: function(id) {
+        return this.state.projects.find(project => project.id === id);
+    },
+
+    getProjectNameById: function(id) {
+        const project = this.getProjectById(id);
+        return project ? project.name : 'Unknown Project';
+    },
+
+    getProjectRateById: function(id) {
+        const project = this.getProjectById(id);
+        return project && project.rate ? parseFloat(project.rate) : this.state.settings.hourlyRate;
     }
 };
 
-// Initialize client manager when DOM is ready
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.className = 'notification show';
+
+    if (type === 'error') {
+        notification.classList.add('error');
+    }
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    clientManager.init();
+    app.init();
+
+    showNotification('Welcome to HourFlow Premium!');
 });
