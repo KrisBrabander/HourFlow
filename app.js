@@ -59,10 +59,29 @@ const app = {
         }
 
         try {
-            const response = await fetch(`/api/validate-license?licenseKey=${license}`);
-            const data = await response.json();
+            // Add a fallback mechanism to try both API endpoints
+            let response;
+            let data;
+            
+            try {
+                // First try the validate-license endpoint (GET request)
+                response = await fetch(`/api/validate-license?licenseKey=${license}`);
+                data = await response.json();
+            } catch (error) {
+                console.log('Trying fallback license verification method...');
+                // If that fails, try the verify-license endpoint (POST request)
+                response = await fetch('/api/verify-license', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ licenseKey: license })
+                });
+                data = await response.json();
+            }
 
             if (!data.valid) {
+                console.log('License validation failed:', data);
                 alert("Invalid license key. Please purchase a valid license.");
                 window.location.href = "https://gumroad.com/l/YOURPRODUCT";
                 return;
