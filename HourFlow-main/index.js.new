@@ -1,0 +1,22 @@
+// Import the license check function
+import { checkLicense } from './license-check.js';
+
+// Run license check when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user has a valid license
+    const hasValidLicense = checkLicense();
+    
+    // Only initialize the app if the license is valid
+    // The checkLicense function will automatically redirect to the license page if needed
+    if (hasValidLicense) {
+        initializeApp();
+    }
+});
+
+// Your existing app initialization code goes here
+function initializeApp() {
+    // This is where you would put your existing initialization code
+    console.log('Application initialized successfully');
+    
+    // Your existing code...
+}
