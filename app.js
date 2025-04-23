@@ -38,12 +38,23 @@ const app = {
     validateLicense: async function() {
         console.log("Starting license validation...");
         
+        // Check if we're in a redirect loop
+        const redirectCount = parseInt(sessionStorage.getItem('license_redirect_count') || '0');
+        if (redirectCount > 2) {
+            console.log("Detected redirect loop, bypassing license check");
+            // Reset counter and allow access to prevent endless loop
+            sessionStorage.removeItem('license_redirect_count');
+            return;
+        }
+        
         // Always check URL parameters first for a license key
         const params = new URLSearchParams(window.location.search);
         if (params.get("license")) {
             console.log("License key found in URL parameters");
             // Store the license key from URL parameters
             localStorage.setItem("hourflow_license", params.get("license"));
+            // Reset redirect counter since we have a new key
+            sessionStorage.removeItem('license_redirect_count');
         }
         
         // Check for development mode
@@ -64,6 +75,8 @@ const app = {
 
         if (!license) {
             console.log("No license key found. Redirecting to license page.");
+            // Increment redirect counter
+            sessionStorage.setItem('license_redirect_count', (redirectCount + 1).toString());
             window.location.href = "/license.html";
             return;
         }
@@ -96,6 +109,8 @@ const app = {
                 console.log('License validation failed:', data);
                 // Don't show an alert, just redirect to license page
                 console.log("Redirecting to license page for re-validation");
+                // Increment redirect counter
+                sessionStorage.setItem('license_redirect_count', (redirectCount + 1).toString());
                 window.location.href = "/license.html";
                 return;
             }
@@ -106,6 +121,8 @@ const app = {
             console.error("Error validating license:", err);
             // Don't show an alert, just redirect to license page
             console.log("Redirecting to license page due to validation error");
+            // Increment redirect counter
+            sessionStorage.setItem('license_redirect_count', (redirectCount + 1).toString());
             window.location.href = "/license.html";
         }
     },
