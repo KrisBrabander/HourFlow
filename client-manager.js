@@ -1,34 +1,83 @@
 // Client Manager - Handles all client-related functionality
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Client Manager initialized');
+// DIRECT APPROACH - Geen DOMContentLoaded event, direct uitvoeren
+(function() {
+    console.log('Client Manager initialized - DIRECT APPROACH');
     
-    // Get DOM elements
-    const addClientBtn = document.getElementById('add-client-btn');
+    // Wacht 1 seconde om zeker te zijn dat de DOM geladen is
+    setTimeout(function() {
+        initClientManager();
+    }, 1000);
+    
+    // Ook proberen met DOMContentLoaded voor de zekerheid
+    document.addEventListener('DOMContentLoaded', initClientManager);
+    
+    // Ook proberen met window.onload voor de zekerheid
+    window.onload = initClientManager;
+})();
+
+function initClientManager() {
+    // Get DOM elements - Direct met querySelector voor betere compatibiliteit
+    const addClientBtn = document.querySelector('#add-client-btn');
     const clientForm = document.querySelector('.client-form');
     const closeClientFormBtn = document.querySelector('.close-client-form');
-    const clientFormElement = document.getElementById('client-form');
+    const clientFormElement = document.querySelector('#client-form');
     
     // Log elements to debug
+    console.log('INIT CLIENT MANAGER - DIRECT APPROACH');
     console.log('Add Client Button:', addClientBtn);
     console.log('Client Form:', clientForm);
     console.log('Close Button:', closeClientFormBtn);
     console.log('Form Element:', clientFormElement);
     
-    // Add event listener to Add Client button
-    if (addClientBtn) {
-        addClientBtn.addEventListener('click', function() {
-            console.log('Add Client button clicked');
+    // DIRECT AANPAK - Voeg click handler toe aan document.body en gebruik event delegation
+    document.body.addEventListener('click', function(event) {
+        // Check of de geklikte element de Add Client knop is of een kind ervan
+        if (event.target.id === 'add-client-btn' || event.target.closest('#add-client-btn')) {
+            console.log('Add Client button clicked via delegation');
             if (clientForm) {
                 clientForm.style.display = 'block';
             } else {
                 console.error('Client form not found');
+                // Probeer het formulier opnieuw te vinden
+                const retryForm = document.querySelector('.client-form');
+                if (retryForm) {
+                    retryForm.style.display = 'block';
+                }
             }
-        });
+        }
+        
+        // Check of de geklikte element de Close knop is of een kind ervan
+        if (event.target.classList.contains('close-client-form') || event.target.closest('.close-client-form')) {
+            console.log('Close button clicked via delegation');
+            const form = document.querySelector('.client-form');
+            if (form) {
+                form.style.display = 'none';
+            }
+        }
+    });
+    
+    // Directe event listener voor de zekerheid
+    if (addClientBtn) {
+        console.log('Adding direct click handler to Add Client button');
+        addClientBtn.onclick = function() {
+            console.log('Add Client button clicked directly');
+            if (clientForm) {
+                clientForm.style.display = 'block';
+            } else {
+                console.error('Client form not found in direct handler');
+                // Probeer het formulier opnieuw te vinden
+                const retryForm = document.querySelector('.client-form');
+                if (retryForm) {
+                    retryForm.style.display = 'block';
+                }
+            }
+            return false; // Voorkom default gedrag
+        };
     } else {
-        console.error('Add Client button not found');
+        console.error('Add Client button not found for direct handler');
     }
     
-    // Add event listener to Close button
+    // Voeg event listener toe aan de Close knop (niet meer nodig door event delegation, maar voor de zekerheid)
     if (closeClientFormBtn) {
         closeClientFormBtn.addEventListener('click', function() {
             console.log('Close button clicked');
@@ -85,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.querySelector('.clients-list')) {
         renderClientsList();
     }
-});
+}
 
 // Generate unique ID
 function generateId() {
