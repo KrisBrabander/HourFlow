@@ -19,13 +19,13 @@ const app = {
 
     // Initialize app
     init: async function() {
-        // Check if we're coming from the license page to prevent redirect loops
-        const fromLicensePage = sessionStorage.getItem('from_license_page') === 'true';
-        sessionStorage.removeItem('from_license_page');
+        // Forceer licentievalidatie bij elke app start
+        const isLicensed = await this.validateLicense();
         
-        // Skip license validation if we just came from the license page
-        if (!fromLicensePage) {
-            await this.validateLicense();
+        // Als er geen geldige licentie is, stop de initialisatie
+        if (!isLicensed) {
+            console.log("Geen geldige licentie gevonden. App initialisatie gestopt.");
+            return;
         }
 
         // Initialize navigation
@@ -45,14 +45,9 @@ const app = {
     validateLicense: async function() {
         console.log("Start licentievalidatie...");
         
-        // Controleer of we van de licentiepagina komen om redirect-lussen te voorkomen
-        const fromLicensePage = sessionStorage.getItem('from_license_page') === 'true';
-        if (fromLicensePage) {
-            console.log("Komend van licentiepagina, sla validatie over");
-            // Verwijder de markering, maar alleen als we niet op de licentiepagina zijn
-            if (!window.location.pathname.includes('license.html')) {
-                sessionStorage.removeItem('from_license_page');
-            }
+        // Als we op de licentiepagina zijn, validatie overslaan
+        if (window.location.pathname.includes('license.html')) {
+            console.log("Op licentiepagina, validatie overgeslagen");
             return true;
         }
         
@@ -70,10 +65,10 @@ const app = {
             }
         }
         
-        // Controleer op development mode
-        const isDevelopmentMode = localStorage.getItem("devMode") === "true" || 
-                                 window.location.hostname === "localhost" || 
-                                 window.location.hostname === "127.0.0.1";
+        // Controleer op development mode - ALLEEN VOOR LOKALE ONTWIKKELING
+        const isDevelopmentMode = localStorage.getItem("devMode") === "true" && 
+                                (window.location.hostname === "localhost" || 
+                                 window.location.hostname === "127.0.0.1");
         
         if (isDevelopmentMode) {
             console.log("Development mode actief - licentiecontrole overgeslagen");
@@ -85,32 +80,53 @@ const app = {
 
         if (!license) {
             console.log("Geen licentiesleutel gevonden. Doorsturen naar licentiepagina.");
-            // Controleer op redirect-lus
-            const redirectCount = parseInt(sessionStorage.getItem('license_redirect_count') || '0');
-            if (redirectCount > 2) {
-                console.log("Teveel redirects gedetecteerd, sta toegang toe om lus te voorkomen");
-                return true;
-            }
-            
-            // Verhoog redirect teller
-            sessionStorage.setItem('license_redirect_count', (redirectCount + 1).toString());
+            // Reset redirect teller als we handmatig naar de app navigeren zonder licentie
+            sessionStorage.removeItem('license_redirect_count');
             window.location.href = "/license.html";
             return false;
         }
         
-        // Eenvoudige validatie - controleer of de sleutel een minimale lengte heeft
-        // of overeenkomt met een van onze testsleutels
-        const testKeys = ['DEMO-KEY-1234', 'TEST-KEY-5678'];
-        const isValidFormat = license.length >= 8 || testKeys.includes(license);
-        
-        if (isValidFormat) {
-            console.log("Licentiesleutel gevonden, toegang toegestaan");
-            return true;
-        } else {
-            console.log("Ongeldige licentiesleutel. Doorsturen naar licentiepagina.");
-            localStorage.removeItem("hourflow_license");
-            window.location.href = "/license.html";
-            return false;
+        // Valideer de licentie via de API
+        try {
+            const response = await fetch('/api/verify-license', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ licenseKey: license })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API fout: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.valid) {
+                console.log("Licentiesleutel geverifieerd, toegang toegestaan");
+                return true;
+            } else {
+                console.log("Ongeldige licentiesleutel. Doorsturen naar licentiepagina.");
+                localStorage.removeItem("hourflow_license");
+                window.location.href = "/license.html";
+                return false;
+            }
+        } catch (error) {
+            console.error("Fout bij licentievalidatie:", error);
+            
+            // Fallback validatie als API niet beschikbaar is
+            const testKeys = ['DEMO-KEY-1234', 'TEST-KEY-5678'];
+            const isValidFormat = license.length >= 8 || testKeys.includes(license);
+            
+            if (isValidFormat) {
+                console.log("Licentie lokaal gevalideerd, toegang toegestaan");
+                return true;
+            } else {
+                console.log("Ongeldige licentiesleutel. Doorsturen naar licentiepagina.");
+                localStorage.removeItem("hourflow_license");
+                window.location.href = "/license.html";
+                return false;
+            }
         }
     },
 
