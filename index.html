@@ -1581,6 +1581,8 @@ ul {
                 var addClientBtn = document.getElementById('add-client-btn');
                 var clientForm = document.querySelector('.client-form');
                 var closeBtn = document.querySelector('.close-client-form');
+                var clientFormElement = document.getElementById('client-form');
+                var clientsTable = document.getElementById('clients-table');
                 
                 if (addClientBtn && clientForm) {
                     console.log('EMERGENCY FIX: Add Client knop gevonden');
@@ -1606,8 +1608,166 @@ ul {
                             return false;
                         };
                     }
+                    
+                    // Fix het formulier submission
+                    if (clientFormElement) {
+                        clientFormElement.onsubmit = function(e) {
+                            e.preventDefault();
+                            console.log('Client formulier ingediend (EMERGENCY FIX)');
+                            
+                            // Verzamel formulier data
+                            var clientName = document.getElementById('client-name').value;
+                            var clientContact = document.getElementById('client-contact').value;
+                            var clientEmail = document.getElementById('client-email').value;
+                            var clientPhone = document.getElementById('client-phone').value;
+                            var clientAddress = document.getElementById('client-address').value;
+                            
+                            // Genereer uniek ID
+                            var clientId = 'client_' + Date.now();
+                            
+                            // Maak client object
+                            var newClient = {
+                                id: clientId,
+                                name: clientName,
+                                contact: clientContact,
+                                email: clientEmail,
+                                phone: clientPhone,
+                                address: clientAddress,
+                                dateAdded: new Date().toISOString()
+                            };
+                            
+                            // Haal bestaande clients op of maak nieuwe array
+                            var clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                            
+                            // Voeg nieuwe client toe
+                            clients.push(newClient);
+                            
+                            // Sla op in localStorage
+                            localStorage.setItem('clients', JSON.stringify(clients));
+                            
+                            // Update de clients tabel
+                            updateClientsTable();
+                            
+                            // Reset formulier
+                            clientFormElement.reset();
+                            
+                            // Verberg formulier
+                            clientForm.style.display = 'none';
+                            
+                            // Toon notificatie
+                            var notification = document.getElementById('notification');
+                            if (notification) {
+                                notification.textContent = 'Client successfully added!';
+                                notification.className = 'notification show';
+                                setTimeout(function() {
+                                    notification.classList.remove('show');
+                                }, 3000);
+                            }
+                            
+                            return false;
+                        };
+                    }
                 } else {
                     console.error('EMERGENCY FIX: Kon Add Client knop of formulier niet vinden');
+                }
+                
+                // Update clients tabel bij laden
+                updateClientsTable();
+                
+                // Functie om clients tabel bij te werken
+                function updateClientsTable() {
+                    if (!clientsTable) return;
+                    
+                    var tableBody = clientsTable.querySelector('tbody');
+                    if (!tableBody) return;
+                    
+                    // Haal clients op uit localStorage
+                    var clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                    
+                    // Leeg de tabel
+                    tableBody.innerHTML = '';
+                    
+                    // Als er geen clients zijn
+                    if (clients.length === 0) {
+                        var emptyRow = document.createElement('tr');
+                        emptyRow.innerHTML = '<td colspan="5" class="text-center">No clients added yet</td>';
+                        tableBody.appendChild(emptyRow);
+                        return;
+                    }
+                    
+                    // Voeg elke client toe aan de tabel
+                    clients.forEach(function(client) {
+                        var row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${client.name || '-'}</td>
+                            <td>${client.contact || '-'}</td>
+                            <td>${client.email || '-'}</td>
+                            <td>${client.phone || '-'}</td>
+                            <td>
+                                <button class="btn-icon edit-client" data-id="${client.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon delete-client" data-id="${client.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                    
+                    // Voeg event listeners toe aan edit en delete knoppen
+                    document.querySelectorAll('.edit-client').forEach(function(btn) {
+                        btn.onclick = function() {
+                            var clientId = this.getAttribute('data-id');
+                            console.log('Edit client:', clientId);
+                            // Implementeer edit functionaliteit hier
+                        };
+                    });
+                    
+                    document.querySelectorAll('.delete-client').forEach(function(btn) {
+                        btn.onclick = function() {
+                            var clientId = this.getAttribute('data-id');
+                            if (confirm('Are you sure you want to delete this client?')) {
+                                var clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                                clients = clients.filter(function(client) { 
+                                    return client.id !== clientId; 
+                                });
+                                localStorage.setItem('clients', JSON.stringify(clients));
+                                updateClientsTable();
+                                
+                                // Toon notificatie
+                                var notification = document.getElementById('notification');
+                                if (notification) {
+                                    notification.textContent = 'Client successfully deleted!';
+                                    notification.className = 'notification show';
+                                    setTimeout(function() {
+                                        notification.classList.remove('show');
+                                    }, 3000);
+                                }
+                            }
+                        };
+                    });
+                }
+                
+                // Voeg clear all clients functionaliteit toe
+                var clearAllClientsBtn = document.getElementById('clear-all-clients');
+                if (clearAllClientsBtn) {
+                    clearAllClientsBtn.onclick = function() {
+                        if (confirm('Are you sure you want to delete ALL clients? This cannot be undone.')) {
+                            localStorage.setItem('clients', '[]');
+                            updateClientsTable();
+                            
+                            // Toon notificatie
+                            var notification = document.getElementById('notification');
+                            if (notification) {
+                                notification.textContent = 'All clients deleted!';
+                                notification.className = 'notification show';
+                                setTimeout(function() {
+                                    notification.classList.remove('show');
+                                }, 3000);
+                            }
+                        }
+                    };
                 }
             });
         })();
