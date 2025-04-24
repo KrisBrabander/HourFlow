@@ -72,21 +72,37 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Check for redirect loop
+            // Markeer dat we op de licentiepagina zijn
+            sessionStorage.setItem('on_license_page', 'true');
+            
+            // Reset de redirect teller als we handmatig naar de licentiepagina navigeren
+            if (!sessionStorage.getItem('from_license_page')) {
+                sessionStorage.removeItem('license_redirect_count');
+            }
+            
+            // Controleer op redirect-lus
             const redirectCount = parseInt(sessionStorage.getItem('license_redirect_count') || '0');
             if (redirectCount > 2) {
-                // Show a message about the issue
-                document.getElementById('error-message').textContent = 'Having trouble with license verification. Please try a test key: DEMO-KEY-1234';
+                // Toon een bericht over het probleem
+                document.getElementById('error-message').textContent = 'Probleem met licentievalidatie. Probeer deze testsleutel: DEMO-KEY-1234';
                 document.getElementById('error-message').style.display = 'block';
-                // Reset counter to give a fresh start
+                // Reset teller voor een nieuwe start
                 sessionStorage.removeItem('license_redirect_count');
                 return;
             }
             
-            // Check if user already has a valid license key in localStorage
+            // Controleer op URL parameter licentie
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('license')) {
+                console.log('Licentie gevonden in URL parameters');
+                verifyLicenseKey(params.get('license'));
+                return;
+            }
+            
+            // Controleer of gebruiker al een geldige licentie heeft in localStorage
             const storedKey = localStorage.getItem('hourflow_license');
             if (storedKey) {
-                // Verify the stored key
+                // Verifieer de opgeslagen sleutel
                 verifyLicenseKey(storedKey, true);
             }
 
@@ -107,28 +123,33 @@
             });
 
             function verifyLicenseKey(key, isAutoCheck = false) {
-                // Hide messages initially
+                // Verberg berichten initieel
                 if (!isAutoCheck) {
                     errorMessage.style.display = 'none';
                     successMessage.style.display = 'none';
                 }
                 
-                // Simple validation - check if key is at least 8 characters
-                // or matches one of our test keys
+                // Eenvoudige validatie - controleer of sleutel minstens 8 tekens heeft
+                // of overeenkomt met een van onze testsleutels
                 const testKeys = ['DEMO-KEY-1234', 'TEST-KEY-5678'];
                 const isValidFormat = key.length >= 8 || testKeys.includes(key);
                 
                 if (isValidFormat) {
-                    // Store the license key
+                    // Sla de licentiesleutel op
                     localStorage.setItem('hourflow_license', key);
+                    
+                    // Markeer dat we van de licentiepagina komen
+                    sessionStorage.setItem('from_license_page', 'true');
+                    // Reset redirect teller
+                    sessionStorage.removeItem('license_redirect_count');
                     
                     if (!isAutoCheck) {
                         successMessage.style.display = 'block';
                     }
                     
-                    // Redirect to the main application after a short delay
+                    // Redirect naar de hoofdapplicatie na een korte vertraging
                     setTimeout(() => {
-                        window.location.replace('/index.html');
+                        window.location.href = '/index.html';
                     }, isAutoCheck ? 0 : 1500);
                 } else {
                     if (!isAutoCheck) {
