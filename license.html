@@ -1,73 +1,215 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>License Verification</title>
+    <title>HourFlow Premium - Licentievalidatie</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .container {
-            max-width: 500px;
-            margin: 100px auto;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            background-color: #fff;
+        :root {
+            --primary: #3a0ca3;
+            --primary-light: #4361ee;
+            --secondary: #7209b7;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --light: #f8f9fa;
+            --medium: #8d99ae;
+            --dark: #212529;
+            --text: #333333;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
         }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--text);
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .license-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            background-color: white;
+        }
+        
+        .license-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0;
+        }
+        
+        .premium-badge {
+            font-size: 0.8rem;
+            background-color: var(--secondary);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-top: 5px;
+        }
+        
         .form-group {
             margin-bottom: 20px;
         }
+        
         label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
         }
+        
         input[type="text"] {
             width: 100%;
-            padding: 10px;
+            padding: 12px 15px;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: var(--border-radius);
             font-size: 16px;
+            transition: var(--transition);
         }
-        button {
-            background-color: #4CAF50;
-            color: white;
+        
+        input[type="text"]:focus {
+            border-color: var(--primary-light);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 15px;
             border: none;
-            padding: 12px 20px;
-            border-radius: 4px;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 500;
             cursor: pointer;
-            font-size: 16px;
+            transition: var(--transition);
             width: 100%;
+            margin-bottom: 10px;
         }
-        button:hover {
-            background-color: #45a049;
+        
+        .btn i {
+            margin-right: 8px;
         }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-light);
+        }
+        
+        .btn-secondary {
+            background-color: #e9ecef;
+            color: var(--dark);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #dee2e6;
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+            display: none;
+        }
+        
         .error-message {
-            color: #f44336;
-            margin-top: 10px;
-            display: none;
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--danger);
+            border-left: 3px solid var(--danger);
         }
+        
         .success-message {
-            color: #4CAF50;
-            margin-top: 10px;
-            display: none;
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success);
+            border-left: 3px solid var(--success);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: var(--medium);
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background-color: #ddd;
+        }
+        
+        .divider span {
+            padding: 0 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>License Verification</h1>
-        <p>Please enter the license key you received from Gumroad to access the application.</p>
-        
-        <div class="form-group">
-            <label for="license-key">License Key:</label>
-            <input type="text" id="license-key" placeholder="Enter your license key">
+    <div class="license-container">
+        <div class="license-header">
+            <div class="logo">
+                <h1>HourFlow</h1>
+                <span class="premium-badge">PREMIUM</span>
+            </div>
+            <h2>Licentievalidatie</h2>
+            <p>Voer de licentiesleutel in die je van Gumroad hebt ontvangen om toegang te krijgen tot de applicatie.</p>
         </div>
         
-        <button id="verify-button">Verify License</button>
+        <div class="form-group">
+            <label for="license-key">Licentiesleutel:</label>
+            <input type="text" id="license-key" placeholder="Voer je licentiesleutel in">
+        </div>
         
-        <p id="error-message" class="error-message">Invalid license key. Please check and try again.</p>
-        <p id="success-message" class="success-message">License verified successfully! Redirecting to application...</p>
+        <button id="verify-button" class="btn btn-primary">
+            <i class="fas fa-key"></i> Valideer Licentie
+        </button>
+        
+        <div class="divider"><span>OF</span></div>
+        
+        <a href="https://krisbrabander.gumroad.com/l/HourFlow" target="_blank" class="btn btn-secondary">
+            <i class="fas fa-shopping-cart"></i> Koop HourFlow Premium
+        </a>
+        
+        <div class="divider"><span>TESTEN</span></div>
+        
+        <button id="reset-license" class="btn btn-secondary">
+            <i class="fas fa-trash"></i> Reset Licentie (voor testen)
+        </button>
+        
+        <div id="error-message" class="message error-message">Ongeldige licentiesleutel. Controleer en probeer opnieuw.</div>
+        <div id="success-message" class="message success-message">Licentie succesvol geverifieerd! Je wordt doorgestuurd naar de applicatie...</div>
     </div>
 
     <script>
@@ -81,10 +223,10 @@
             }
             
             // Controleer of gebruiker al een geldige licentie heeft in localStorage
-            // maar forceer geen automatische redirect
             const storedKey = localStorage.getItem('hourflow_license');
 
             const verifyButton = document.getElementById('verify-button');
+            const resetButton = document.getElementById('reset-license');
             const licenseInput = document.getElementById('license-key');
             const errorMessage = document.getElementById('error-message');
             const successMessage = document.getElementById('success-message');
@@ -94,6 +236,32 @@
                 licenseInput.value = storedKey;
             }
 
+            // Voeg Enter-toets ondersteuning toe
+            licenseInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    verifyButton.click();
+                }
+            });
+
+            // Reset licentie knop
+            resetButton.addEventListener('click', function() {
+                // Verwijder de licentie uit localStorage
+                localStorage.removeItem('hourflow_license');
+                
+                // Leeg het invoerveld
+                licenseInput.value = '';
+                
+                // Toon bevestiging
+                errorMessage.textContent = 'Licentie is gereset. Je kunt nu opnieuw testen.';
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+                
+                // Verwijder ook eventuele sessie-informatie
+                sessionStorage.removeItem('from_license_page');
+                sessionStorage.removeItem('license_redirect_count');
+                sessionStorage.removeItem('on_license_page');
+            });
+
             verifyButton.addEventListener('click', function() {
                 const licenseKey = licenseInput.value.trim();
                 if (!licenseKey) {
@@ -102,11 +270,20 @@
                     successMessage.style.display = 'none';
                     return;
                 }
+                
+                // Toon laadstatus op de knop
+                const originalButtonText = verifyButton.innerHTML;
+                verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Valideren...';
+                verifyButton.disabled = true;
 
-                verifyLicenseKey(licenseKey);
+                verifyLicenseKey(licenseKey, false, function() {
+                    // Herstel knop na validatie
+                    verifyButton.innerHTML = originalButtonText;
+                    verifyButton.disabled = false;
+                });
             });
 
-            function verifyLicenseKey(key, isAutoCheck = false) {
+            function verifyLicenseKey(key, isAutoCheck = false, callback = null) {
                 // Verberg berichten initieel
                 errorMessage.style.display = 'none';
                 successMessage.style.display = 'none';
@@ -126,6 +303,8 @@
                     return response.json();
                 })
                 .then(data => {
+                    if (callback) callback();
+                    
                     if (data.valid) {
                         // Sla de licentiesleutel op
                         localStorage.setItem('hourflow_license', key);
@@ -139,12 +318,13 @@
                         }, 1500);
                     } else {
                         // Toon foutmelding
-                        errorMessage.textContent = 'Ongeldige licentiesleutel. Controleer en probeer opnieuw.';
+                        errorMessage.textContent = data.message || 'Ongeldige licentiesleutel. Controleer en probeer opnieuw.';
                         errorMessage.style.display = 'block';
                     }
                 })
                 .catch(error => {
                     console.error('Fout bij licentievalidatie:', error);
+                    if (callback) callback();
                     
                     // Fallback validatie als API niet beschikbaar is
                     const testKeys = ['DEMO-KEY-1234', 'TEST-KEY-5678'];
