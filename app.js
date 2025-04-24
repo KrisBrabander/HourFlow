@@ -41,40 +41,77 @@ const app = {
         this.updateDashboardStats();
     },
 
-    // Validate license key via API
+    // Valideer licentie
     validateLicense: async function() {
-        console.log("Starting license validation...");
+        console.log("Start licentievalidatie...");
         
-        // Check for URL parameter license key
-        const params = new URLSearchParams(window.location.search);
-        if (params.get("license")) {
-            console.log("License key found in URL parameters");
-            localStorage.setItem("hourflow_license", params.get("license"));
+        // Controleer of we van de licentiepagina komen om redirect-lussen te voorkomen
+        const fromLicensePage = sessionStorage.getItem('from_license_page') === 'true';
+        if (fromLicensePage) {
+            console.log("Komend van licentiepagina, sla validatie over");
+            // Verwijder de markering, maar alleen als we niet op de licentiepagina zijn
+            if (!window.location.pathname.includes('license.html')) {
+                sessionStorage.removeItem('from_license_page');
+            }
+            return true;
         }
         
-        // Check for development mode
+        // Controleer op URL parameter licentie
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("license")) {
+            console.log("Licentie gevonden in URL parameters");
+            localStorage.setItem("hourflow_license", params.get("license"));
+            // Verwijder licentie uit URL om problemen te voorkomen bij vernieuwen
+            if (window.history && window.history.replaceState) {
+                const newUrl = window.location.pathname + 
+                               (window.location.search ? window.location.search.replace(/[&?]license=[^&]+/, '') : '') + 
+                               window.location.hash;
+                window.history.replaceState({}, document.title, newUrl);
+            }
+        }
+        
+        // Controleer op development mode
         const isDevelopmentMode = localStorage.getItem("devMode") === "true" || 
                                  window.location.hostname === "localhost" || 
                                  window.location.hostname === "127.0.0.1";
         
         if (isDevelopmentMode) {
-            console.log("Development mode active - license check bypassed");
+            console.log("Development mode actief - licentiecontrole overgeslagen");
             return true;
         }
         
-        // Get the license key from localStorage
+        // Haal de licentie op uit localStorage
         const license = localStorage.getItem("hourflow_license");
 
         if (!license) {
-            console.log("No license key found. Redirecting to license page.");
-            window.location.replace("/license.html");
+            console.log("Geen licentiesleutel gevonden. Doorsturen naar licentiepagina.");
+            // Controleer op redirect-lus
+            const redirectCount = parseInt(sessionStorage.getItem('license_redirect_count') || '0');
+            if (redirectCount > 2) {
+                console.log("Teveel redirects gedetecteerd, sta toegang toe om lus te voorkomen");
+                return true;
+            }
+            
+            // Verhoog redirect teller
+            sessionStorage.setItem('license_redirect_count', (redirectCount + 1).toString());
+            window.location.href = "/license.html";
             return false;
         }
         
-        // Simple verification - just check if the key exists
-        // This avoids API calls that might cause redirect loops
-        console.log("License key found, allowing access");
-        return true;
+        // Eenvoudige validatie - controleer of de sleutel een minimale lengte heeft
+        // of overeenkomt met een van onze testsleutels
+        const testKeys = ['DEMO-KEY-1234', 'TEST-KEY-5678'];
+        const isValidFormat = license.length >= 8 || testKeys.includes(license);
+        
+        if (isValidFormat) {
+            console.log("Licentiesleutel gevonden, toegang toegestaan");
+            return true;
+        } else {
+            console.log("Ongeldige licentiesleutel. Doorsturen naar licentiepagina.");
+            localStorage.removeItem("hourflow_license");
+            window.location.href = "/license.html";
+            return false;
+        }
     },
 
     // Initialize navigation
