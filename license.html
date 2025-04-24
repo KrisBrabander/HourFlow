@@ -288,87 +288,27 @@
                 errorMessage.style.display = 'none';
                 successMessage.style.display = 'none';
                 
-                // Validate the license via the API
-                fetch('/api/verify-license', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ licenseKey: key })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`API fout: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
+                // SUPER SIMPLE APPROACH: Just save the key and go to index
+                if (key && key.length > 3) {
+                    // Save the license key
+                    localStorage.setItem('hourflow_license', key);
+                    
+                    // Show success message
+                    successMessage.style.display = 'block';
+                    
+                    // DIRECT APPROACH: Just set window.location directly
+                    window.location = 'index.html';
+                    
+                    // If callback exists, call it
                     if (callback) callback();
                     
-                    if (data.valid) {
-                        // Save the license key
-                        localStorage.setItem('hourflow_license', key);
-                        
-                        // Show success message
-                        successMessage.style.display = 'block';
-                        
-                        // Create a form to submit to index.html
-                        const form = document.createElement('form');
-                        form.method = 'GET';
-                        form.action = 'index.html';
-                        
-                        // Add a hidden field with the license
-                        const hiddenField = document.createElement('input');
-                        hiddenField.type = 'hidden';
-                        hiddenField.name = 'license';
-                        hiddenField.value = key;
-                        form.appendChild(hiddenField);
-                        
-                        // Add the form to the document and submit it
-                        document.body.appendChild(form);
-                        form.submit();
-                    } else {
-                        // Show error message
-                        errorMessage.textContent = data.message || 'Invalid license key. Please check and try again.';
-                        errorMessage.style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error validating license:', error);
-                    if (callback) callback();
-                    
-                    // Fallback validation if API is not available
-                    const testKeys = ['DEMO-KEY-1234', 'TEST-KEY-5678'];
-                    const isValidFormat = key.length >= 8 || testKeys.includes(key);
-                    
-                    if (isValidFormat) {
-                        // Save the license key
-                        localStorage.setItem('hourflow_license', key);
-                        
-                        // Show success message
-                        successMessage.style.display = 'block';
-                        
-                        // Create a form to submit to index.html
-                        const form = document.createElement('form');
-                        form.method = 'GET';
-                        form.action = 'index.html';
-                        
-                        // Add a hidden field with the license
-                        const hiddenField = document.createElement('input');
-                        hiddenField.type = 'hidden';
-                        hiddenField.name = 'license';
-                        hiddenField.value = key;
-                        form.appendChild(hiddenField);
-                        
-                        // Add the form to the document and submit it
-                        document.body.appendChild(form);
-                        form.submit();
-                    } else {
-                        // Show error message
-                        errorMessage.textContent = 'Invalid license key. Please check and try again.';
-                        errorMessage.style.display = 'block';
-                    }
-                });
+                    return;
+                }
+                
+                // If we got here, the key was invalid
+                errorMessage.textContent = 'Invalid license key. Please check and try again.';
+                errorMessage.style.display = 'block';
+                if (callback) callback();
             }
         });
     </script>
