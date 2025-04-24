@@ -249,5 +249,140 @@ function showNotification(message, type = 'success') {
 document.addEventListener('DOMContentLoaded', function() {
     app.init();
 
+    // Initialize client functionality
+    initClientFunctionality();
+
     showNotification('Welcome to HourFlow Premium!');
 });
+
+// Initialize client functionality
+function initClientFunctionality() {
+    // Get DOM elements
+    const addClientBtn = document.getElementById('add-client-btn');
+    const clientForm = document.querySelector('.client-form');
+    const closeClientFormBtn = document.querySelector('.close-client-form');
+    const clientFormElement = document.getElementById('client-form');
+    
+    if (!addClientBtn) {
+        console.error('Add Client button not found');
+        return;
+    }
+    
+    // Add event listener to Add Client button
+    addClientBtn.addEventListener('click', function() {
+        clientForm.style.display = 'block';
+    });
+    
+    // Add event listener to Close button
+    if (closeClientFormBtn) {
+        closeClientFormBtn.addEventListener('click', function() {
+            clientForm.style.display = 'none';
+        });
+    }
+    
+    // Add event listener to client form submission
+    if (clientFormElement) {
+        clientFormElement.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const clientName = document.getElementById('client-name').value;
+            const clientEmail = document.getElementById('client-email').value;
+            const clientPhone = document.getElementById('client-phone').value;
+            const clientAddress = document.getElementById('client-address').value;
+            
+            // Create new client object
+            const newClient = {
+                id: app.generateId(),
+                name: clientName,
+                email: clientEmail,
+                phone: clientPhone,
+                address: clientAddress,
+                dateAdded: new Date().toISOString()
+            };
+            
+            // Add client to state
+            app.state.clients.push(newClient);
+            
+            // Save data
+            app.saveData('clients', app.state.clients);
+            
+            // Reset form
+            clientFormElement.reset();
+            
+            // Hide form
+            clientForm.style.display = 'none';
+            
+            // Show notification
+            showNotification('Client added successfully!');
+            
+            // Refresh client list if on clients page
+            if (document.querySelector('.clients-list')) {
+                renderClientsList();
+            }
+        });
+    }
+}
+
+// Render clients list
+function renderClientsList() {
+    const clientsList = document.querySelector('.clients-list');
+    if (!clientsList) return;
+    
+    // Clear existing list
+    clientsList.innerHTML = '';
+    
+    // Check if there are clients
+    if (app.state.clients.length === 0) {
+        clientsList.innerHTML = '<div class="empty-state">No clients added yet</div>';
+        return;
+    }
+    
+    // Render each client
+    app.state.clients.forEach(client => {
+        const clientCard = document.createElement('div');
+        clientCard.className = 'client-card';
+        clientCard.innerHTML = `
+            <div class="client-card-header">
+                <h3>${client.name}</h3>
+                <div class="client-actions">
+                    <button class="btn-icon edit-client" data-id="${client.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon delete-client" data-id="${client.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="client-card-body">
+                <p><i class="fas fa-envelope"></i> ${client.email || 'No email'}</p>
+                <p><i class="fas fa-phone"></i> ${client.phone || 'No phone'}</p>
+                <p><i class="fas fa-map-marker-alt"></i> ${client.address || 'No address'}</p>
+            </div>
+        `;
+        
+        clientsList.appendChild(clientCard);
+    });
+    
+    // Add event listeners to edit and delete buttons
+    document.querySelectorAll('.edit-client').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const clientId = this.getAttribute('data-id');
+            // Implement edit functionality
+            console.log('Edit client:', clientId);
+        });
+    });
+    
+    document.querySelectorAll('.delete-client').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const clientId = this.getAttribute('data-id');
+            // Implement delete functionality
+            if (confirm('Are you sure you want to delete this client?')) {
+                app.state.clients = app.state.clients.filter(client => client.id !== clientId);
+                app.saveData('clients', app.state.clients);
+                renderClientsList();
+                showNotification('Client deleted successfully!');
+            }
+        });
+    });
+}
