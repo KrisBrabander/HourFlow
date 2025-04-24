@@ -312,21 +312,27 @@
                         // Toon succesbericht
                         successMessage.style.display = 'block';
                         
-                        // Redirect naar de hoofdapplicatie na een korte vertraging
+                        // Directe redirect naar de hoofdapplicatie
+                        successMessage.style.display = 'block';
+                        
+                        // Forceer een harde redirect naar index.html
+                        window.location.href = 'index.html';
+                        
+                        // Als dat niet werkt, probeer een andere methode
                         setTimeout(() => {
-                            // Gebruik window.location.origin om de basis-URL te krijgen
-                            const baseUrl = window.location.origin;
-                            // Redirect naar index.html met absolute URL
-                            window.location.href = `${baseUrl}/index.html`;
-                            
-                            // Als dat niet werkt, probeer na nog een korte vertraging een fallback
-                            setTimeout(() => {
-                                if (window.location.pathname.includes('license.html')) {
-                                    console.log('Fallback redirect naar index.html');
-                                    window.location.replace('./index.html');
-                                }
-                            }, 1000);
-                        }, 1500);
+                            if (window.location.pathname.includes('license.html')) {
+                                console.log('Eerste redirect mislukt, probeer alternatieve methode');
+                                window.location.replace('index.html');
+                                
+                                // Als laatste redmiddel, probeer een volledige pagina reload
+                                setTimeout(() => {
+                                    if (window.location.pathname.includes('license.html')) {
+                                        console.log('Laatste poging: volledige URL');
+                                        window.location.href = window.location.origin + '/index.html';
+                                    }
+                                }, 500);
+                            }
+                        }, 1000);
                     } else {
                         // Toon foutmelding
                         errorMessage.textContent = data.message || 'Ongeldige licentiesleutel. Controleer en probeer opnieuw.';
@@ -348,21 +354,27 @@
                         // Toon succesbericht
                         successMessage.style.display = 'block';
                         
-                        // Redirect naar de hoofdapplicatie na een korte vertraging
+                        // Directe redirect naar de hoofdapplicatie
+                        successMessage.style.display = 'block';
+                        
+                        // Forceer een harde redirect naar index.html
+                        window.location.href = 'index.html';
+                        
+                        // Als dat niet werkt, probeer een andere methode
                         setTimeout(() => {
-                            // Gebruik window.location.origin om de basis-URL te krijgen
-                            const baseUrl = window.location.origin;
-                            // Redirect naar index.html met absolute URL
-                            window.location.href = `${baseUrl}/index.html`;
-                            
-                            // Als dat niet werkt, probeer na nog een korte vertraging een fallback
-                            setTimeout(() => {
-                                if (window.location.pathname.includes('license.html')) {
-                                    console.log('Fallback redirect naar index.html');
-                                    window.location.replace('./index.html');
-                                }
-                            }, 1000);
-                        }, 1500);
+                            if (window.location.pathname.includes('license.html')) {
+                                console.log('Eerste redirect mislukt, probeer alternatieve methode');
+                                window.location.replace('index.html');
+                                
+                                // Als laatste redmiddel, probeer een volledige pagina reload
+                                setTimeout(() => {
+                                    if (window.location.pathname.includes('license.html')) {
+                                        console.log('Laatste poging: volledige URL');
+                                        window.location.href = window.location.origin + '/index.html';
+                                    }
+                                }, 500);
+                            }
+                        }, 1000);
                     } else {
                         // Toon foutmelding
                         errorMessage.textContent = 'Ongeldige licentiesleutel. Controleer en probeer opnieuw.';
