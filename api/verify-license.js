@@ -11,61 +11,54 @@ export default async function handler(req, res) {
       return res.status(400).json({ valid: false, message: 'Licentiesleutel is vereist' });
     }
 
-    // Hier zou je de daadwerkelijke licentiesleutel verificatielogica implementeren
-    // Dit kan het volgende omvatten:
-    // 1. Controleren tegen een database van geldige sleutels
-    // 2. Verifiëren met Gumroad's API
-    // 3. Een eenvoudige vooraf gedefinieerde lijst van geldige sleutels gebruiken
-    
-    // Eenvoudige validatie om redirect-lussen te voorkomen
+    // Controleer eerst op testsleutels (voor ontwikkeling en testen)
     const testKeys = ['DEMO-KEY-1234', 'TEST-KEY-5678'];
-    const isValidFormat = licenseKey.length >= 8 || testKeys.includes(licenseKey);
-    
-    if (isValidFormat) {
-      // Alleen Gumroad API aanroepen als de sleutel een geldig formaat heeft
-      // Dit voorkomt onnodige API-aanroepen
-      if (!testKeys.includes(licenseKey) && licenseKey.length > 20) {
-        const isValidKey = await verifyLicenseWithGumroad(licenseKey);
-        if (isValidKey) {
-          return res.status(200).json({ valid: true, message: 'Licentiesleutel is geldig' });
-        }
-      } else {
-        // Voor testsleutels of sleutels met geldig formaat, accepteren we ze direct
-        return res.status(200).json({ valid: true, message: 'Licentiesleutel is geldig' });
-      }
+    if (testKeys.includes(licenseKey)) {
+      console.log('Testsleutel gebruikt:', licenseKey);
+      return res.status(200).json({ valid: true, message: 'Testsleutel geaccepteerd' });
     }
     
-    // Als we hier komen, is de sleutel ongeldig
-    return res.status(200).json({ valid: false, message: 'Ongeldige licentiesleutel' });
+    // Verifieer met Gumroad API
+    const isValidKey = await verifyLicenseWithGumroad(licenseKey);
+    
+    if (isValidKey) {
+      return res.status(200).json({ 
+        valid: true, 
+        message: 'Licentiesleutel is geldig',
+        licenseKey: licenseKey 
+      });
+    } else {
+      return res.status(200).json({ 
+        valid: false, 
+        message: 'Ongeldige licentiesleutel. Controleer of je de juiste code hebt ingevoerd.'
+      });
+    }
   } catch (error) {
     console.error('Licentieverificatie fout:', error);
-    // Bij een fout accepteren we de licentie om gebruikers niet te blokkeren
-    // en om redirect-lussen te voorkomen
-    return res.status(200).json({ valid: true, message: 'Licentie geaccepteerd (foutafhandeling)' });
+    
+    // Bij een API-fout, controleer of de sleutel een geldig formaat heeft
+    // Dit is een fallback voor als de Gumroad API niet beschikbaar is
+    if (req.body.licenseKey && req.body.licenseKey.includes('-') && req.body.licenseKey.length > 20) {
+      console.log('Gumroad API niet beschikbaar, accepteer sleutel met geldig formaat');
+      return res.status(200).json({ 
+        valid: true, 
+        message: 'Licentie geaccepteerd (fallback validatie)',
+        licenseKey: req.body.licenseKey 
+      });
+    }
+    
+    return res.status(500).json({ 
+      valid: false, 
+      message: 'Er is een fout opgetreden bij het verifiëren van je licentie. Probeer het later opnieuw.'
+    });
   }
 }
 
-// Function to verify license keys with Gumroad
+// Functie om licenties te verifiëren met Gumroad
 async function verifyLicenseWithGumroad(licenseKey) {
-  console.log('Attempting to verify license key:', licenseKey);
+  console.log('Bezig met verifiëren van licentiesleutel:', licenseKey);
   
-  // Include test keys for development
-  const testKeys = ['DEMO-KEY-1234', 'TEST-KEY-5678'];
-  
-  // Check if the key matches any test key
-  if (testKeys.includes(licenseKey)) {
-    console.log('Using test license key');
-    return true;
-  }
-  
-  // Check if the key format matches Gumroad format (like the sample key)
-  // This is a fallback for testing
-  if (licenseKey && licenseKey.includes('-') && licenseKey.length > 20) {
-    console.log('Key appears to be in Gumroad format, accepting for testing');
-    return true;
-  }
-  
-  // Verify with Gumroad API
+  // Verifieer met Gumroad API
   try {
     // Gumroad's license verification endpoint
     const response = await fetch('https://api.gumroad.com/v2/licenses/verify', {
@@ -73,28 +66,56 @@ async function verifyLicenseWithGumroad(licenseKey) {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      // Note: Gumroad expects form data, not JSON
+      // Let op: Gumroad verwacht form data, geen JSON
       body: new URLSearchParams({
-        product_permalink: 'hourflow', // This must exactly match your Gumroad product permalink
+        product_permalink: 'hourflow', // Dit moet exact overeenkomen met je Gumroad product permalink
         license_key: licenseKey,
       }).toString(),
     });
     
+    if (!response.ok) {
+      throw new Error(`Gumroad API fout: ${response.status}`);
+    }
+    
     const data = await response.json();
     
-    // Log the Gumroad response for debugging
+    // Log de Gumroad response voor debugging
     console.log('Gumroad API response:', data);
     
-    // Gumroad returns success: true for valid licenses
+    // Gumroad geeft success: true terug voor geldige licenties
     if (data.success === true) {
-      console.log('License validated successfully with Gumroad');
+      // Controleer of de licentie niet is verlopen (als er een uses_count is)
+      if (data.purchase && data.purchase.refunded) {
+        console.log('Licentie is terugbetaald/geannuleerd');
+        return false;
+      }
+      
+      // Controleer of de licentie niet te vaak is gebruikt (als er een uses_count is)
+      // Je kunt hier een limiet instellen op basis van je licentiebeleid
+      if (data.uses && typeof data.uses_count === 'number') {
+        const maxUses = 5; // Maximaal 5 apparaten/browsers per licentie
+        if (data.uses_count > maxUses) {
+          console.log(`Licentie is te vaak gebruikt: ${data.uses_count} keer (max: ${maxUses})`);
+          return false;
+        }
+      }
+      
+      console.log('Licentie succesvol gevalideerd met Gumroad');
       return true;
     } else {
-      console.log('License validation failed with Gumroad:', data.message || 'Unknown error');
+      console.log('Licentievalidatie mislukt met Gumroad:', data.message || 'Onbekende fout');
       return false;
     }
   } catch (error) {
-    console.error('Gumroad API error:', error);
+    console.error('Gumroad API fout:', error);
+    
+    // Bij een API-fout, controleren we of de sleutel een geldig formaat heeft
+    // Dit is een fallback voor als de Gumroad API niet beschikbaar is
+    if (licenseKey && licenseKey.includes('-') && licenseKey.length > 20) {
+      console.log('Gumroad API niet beschikbaar, accepteer sleutel met geldig formaat');
+      return true;
+    }
+    
     return false;
   }
 }
