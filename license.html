@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -183,33 +183,33 @@
                 <h1>HourFlow</h1>
                 <span class="premium-badge">PREMIUM</span>
             </div>
-            <h2>Licentievalidatie</h2>
-            <p>Voer de licentiesleutel in die je van Gumroad hebt ontvangen om toegang te krijgen tot de applicatie.</p>
+            <h2>License Verification</h2>
+            <p>Enter the license key you received from Gumroad to access the application.</p>
         </div>
         
         <div class="form-group">
-            <label for="license-key">Licentiesleutel:</label>
-            <input type="text" id="license-key" placeholder="Voer je licentiesleutel in">
+            <label for="license-key">License Key:</label>
+            <input type="text" id="license-key" placeholder="Enter your license key">
         </div>
         
         <button id="verify-button" class="btn btn-primary">
-            <i class="fas fa-key"></i> Valideer Licentie
+            <i class="fas fa-key"></i> Verify License
         </button>
         
-        <div class="divider"><span>OF</span></div>
+        <div class="divider"><span>OR</span></div>
         
         <a href="https://krisbrabander.gumroad.com/l/HourFlow" target="_blank" class="btn btn-secondary">
-            <i class="fas fa-shopping-cart"></i> Koop HourFlow Premium
+            <i class="fas fa-shopping-cart"></i> Buy HourFlow Premium
         </a>
         
-        <div class="divider"><span>TESTEN</span></div>
+        <div class="divider"><span>TESTING</span></div>
         
         <button id="reset-license" class="btn btn-secondary">
-            <i class="fas fa-trash"></i> Reset Licentie (voor testen)
+            <i class="fas fa-trash"></i> Reset License (for testing)
         </button>
         
-        <div id="error-message" class="message error-message">Ongeldige licentiesleutel. Controleer en probeer opnieuw.</div>
-        <div id="success-message" class="message success-message">Licentie succesvol geverifieerd! Je wordt doorgestuurd naar de applicatie...</div>
+        <div id="error-message" class="message error-message">Invalid license key. Please check and try again.</div>
+        <div id="success-message" class="message success-message">License successfully verified! Redirecting to application...</div>
     </div>
 
     <script>
@@ -217,7 +217,7 @@
             // Controleer op URL parameter licentie
             const params = new URLSearchParams(window.location.search);
             if (params.get('license')) {
-                console.log('Licentie gevonden in URL parameters');
+                console.log('License found in URL parameters');
                 verifyLicenseKey(params.get('license'));
                 return;
             }
@@ -251,8 +251,8 @@
                 // Leeg het invoerveld
                 licenseInput.value = '';
                 
-                // Toon bevestiging
-                errorMessage.textContent = 'Licentie is gereset. Je kunt nu opnieuw testen.';
+                // Show confirmation
+                errorMessage.textContent = 'License has been reset. You can now test again.';
                 errorMessage.style.display = 'block';
                 successMessage.style.display = 'none';
                 
@@ -265,7 +265,7 @@
             verifyButton.addEventListener('click', function() {
                 const licenseKey = licenseInput.value.trim();
                 if (!licenseKey) {
-                    errorMessage.textContent = 'Voer een licentiesleutel in';
+                    errorMessage.textContent = 'Please enter a license key';
                     errorMessage.style.display = 'block';
                     successMessage.style.display = 'none';
                     return;
@@ -273,7 +273,7 @@
                 
                 // Toon laadstatus op de knop
                 const originalButtonText = verifyButton.innerHTML;
-                verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Valideren...';
+                verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating...';
                 verifyButton.disabled = true;
 
                 verifyLicenseKey(licenseKey, false, function() {
