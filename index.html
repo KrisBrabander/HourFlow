@@ -1570,5 +1570,47 @@ ul {
     <script src="./invoices.js"></script>
     <script src="./pdf-generator.js"></script>
     <script src="./settings.js"></script>
+    
+    <!-- DIRECTE FIX VOOR ADD CLIENT KNOP -->
+    <script>
+        // Direct uitvoeren zonder te wachten
+        (function() {
+            // Wacht tot de pagina volledig geladen is
+            window.addEventListener('load', function() {
+                // Zoek de knop en het formulier
+                var addClientBtn = document.getElementById('add-client-btn');
+                var clientForm = document.querySelector('.client-form');
+                var closeBtn = document.querySelector('.close-client-form');
+                
+                if (addClientBtn && clientForm) {
+                    console.log('EMERGENCY FIX: Add Client knop gevonden');
+                    
+                    // Verwijder alle event listeners door de knop te klonen
+                    var newBtn = addClientBtn.cloneNode(true);
+                    if (addClientBtn.parentNode) {
+                        addClientBtn.parentNode.replaceChild(newBtn, addClientBtn);
+                        
+                        // Voeg nieuwe onclick toe
+                        newBtn.onclick = function(e) {
+                            console.log('Add Client knop geklikt (EMERGENCY FIX)');
+                            clientForm.style.display = 'block';
+                            return false;
+                        };
+                    }
+                    
+                    // Fix de close knop
+                    if (closeBtn) {
+                        closeBtn.onclick = function() {
+                            console.log('Close knop geklikt (EMERGENCY FIX)');
+                            clientForm.style.display = 'none';
+                            return false;
+                        };
+                    }
+                } else {
+                    console.error('EMERGENCY FIX: Kon Add Client knop of formulier niet vinden');
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
