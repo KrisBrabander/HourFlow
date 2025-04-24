@@ -249,38 +249,63 @@ function showNotification(message, type = 'success') {
 document.addEventListener('DOMContentLoaded', function() {
     app.init();
 
-    // Initialize client functionality
-    initClientFunctionality();
+    // DIRECT FIX FOR ADD CLIENT BUTTON
+    setTimeout(function() {
+        fixAddClientButton();
+    }, 500);
 
     showNotification('Welcome to HourFlow Premium!');
 });
 
-// Initialize client functionality
-function initClientFunctionality() {
-    // Get DOM elements
+// DIRECT FIX VOOR DE ADD CLIENT KNOP
+function fixAddClientButton() {
+    console.log('DIRECT FIX VOOR ADD CLIENT KNOP');
+    
+    // Directe DOM manipulatie - forceer een nieuwe knop
     const addClientBtn = document.getElementById('add-client-btn');
     const clientForm = document.querySelector('.client-form');
+    
+    if (addClientBtn) {
+        console.log('Add Client knop gevonden, verwijder bestaande event listeners');
+        // Kloon de knop om alle event listeners te verwijderen
+        const newBtn = addClientBtn.cloneNode(true);
+        addClientBtn.parentNode.replaceChild(newBtn, addClientBtn);
+        
+        // Voeg nieuwe event listener toe
+        newBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Add Client knop geklikt (FIXED)');
+            if (clientForm) {
+                clientForm.style.display = 'block';
+            }
+            return false;
+        };
+    } else {
+        console.error('Add Client knop niet gevonden');
+    }
+    
+    // Fix voor de close knop
     const closeClientFormBtn = document.querySelector('.close-client-form');
+    if (closeClientFormBtn && clientForm) {
+        closeClientFormBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Close knop geklikt (FIXED)');
+            clientForm.style.display = 'none';
+            return false;
+        };
+    }
+}
+
+// Originele functie behouden voor compatibiliteit
+function initClientFunctionality() {
+    console.log('Originele initClientFunctionality wordt niet meer gebruikt');
+    
+    // Formulier submit handler toevoegen
+    const clientForm = document.querySelector('.client-form');
     const clientFormElement = document.getElementById('client-form');
     
-    if (!addClientBtn) {
-        console.error('Add Client button not found');
-        return;
-    }
-    
-    // Add event listener to Add Client button
-    addClientBtn.addEventListener('click', function() {
-        clientForm.style.display = 'block';
-    });
-    
-    // Add event listener to Close button
-    if (closeClientFormBtn) {
-        closeClientFormBtn.addEventListener('click', function() {
-            clientForm.style.display = 'none';
-        });
-    }
-    
-    // Add event listener to client form submission
     if (clientFormElement) {
         clientFormElement.addEventListener('submit', function(e) {
             e.preventDefault();
