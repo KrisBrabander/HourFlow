@@ -1564,7 +1564,6 @@ ul {
     <script src="./app.js"></script>
     <script src="./time-tracker.js"></script>
     <script src="./clients.js"></script>
-    <script src="./client-manager.js"></script>
     <script src="./projects.js"></script>
     <script src="./quotes.js"></script>
     <script src="./invoices.js"></script>
@@ -1622,31 +1621,56 @@ ul {
                             var clientPhone = document.getElementById('client-phone').value;
                             var clientAddress = document.getElementById('client-address').value;
                             
-                            // Genereer uniek ID
-                            var clientId = 'client_' + Date.now();
+                            // Controleer of de naam is ingevuld (voorkom lege klanten)
+                            if (!clientName || clientName.trim() === '') {
+                                alert('Please enter a client name');
+                                return false;
+                            }
                             
-                            // Maak client object
-                            var newClient = {
-                                id: clientId,
-                                name: clientName,
-                                contact: clientContact,
-                                email: clientEmail,
-                                phone: clientPhone,
-                                address: clientAddress,
-                                dateAdded: new Date().toISOString()
-                            };
-                            
-                            // Haal bestaande clients op of maak nieuwe array
+                            // Controleer of we aan het bewerken zijn of een nieuwe client toevoegen
+                            var editingClientId = clientFormElement.getAttribute('data-editing-id');
                             var clients = JSON.parse(localStorage.getItem('clients') || '[]');
                             
-                            // Voeg nieuwe client toe
-                            clients.push(newClient);
+                            if (editingClientId) {
+                                // Update bestaande client
+                                for (var i = 0; i < clients.length; i++) {
+                                    if (clients[i].id === editingClientId) {
+                                        clients[i].name = clientName;
+                                        clients[i].contact = clientContact;
+                                        clients[i].email = clientEmail;
+                                        clients[i].phone = clientPhone;
+                                        clients[i].address = clientAddress;
+                                        break;
+                                    }
+                                }
+                                
+                                // Reset editing mode
+                                clientFormElement.removeAttribute('data-editing-id');
+                                document.querySelector('.card-title').textContent = 'Add Client';
+                            } else {
+                                // Maak nieuwe client object
+                                var newClient = {
+                                    id: 'client_' + Date.now(),
+                                    name: clientName,
+                                    contact: clientContact,
+                                    email: clientEmail,
+                                    phone: clientPhone,
+                                    address: clientAddress,
+                                    dateAdded: new Date().toISOString()
+                                };
+                                
+                                // Voeg nieuwe client toe
+                                clients.push(newClient);
+                            }
                             
                             // Sla op in localStorage
                             localStorage.setItem('clients', JSON.stringify(clients));
                             
                             // Update de clients tabel
                             updateClientsTable();
+                            
+                            // Update alle client dropdowns in de applicatie
+                            updateClientDropdowns();
                             
                             // Reset formulier
                             clientFormElement.reset();
@@ -1657,7 +1681,8 @@ ul {
                             // Toon notificatie
                             var notification = document.getElementById('notification');
                             if (notification) {
-                                notification.textContent = 'Client successfully added!';
+                                var message = editingClientId ? 'Client successfully updated!' : 'Client successfully added!';
+                                notification.textContent = message;
                                 notification.className = 'notification show';
                                 setTimeout(function() {
                                     notification.classList.remove('show');
@@ -1673,6 +1698,44 @@ ul {
                 
                 // Update clients tabel bij laden
                 updateClientsTable();
+                
+                // Update alle client dropdowns
+                updateClientDropdowns();
+                
+                // Functie om alle client dropdowns bij te werken
+                function updateClientDropdowns() {
+                    // Haal alle clients op
+                    var clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                    
+                    // Zoek alle client dropdowns
+                    var clientDropdowns = document.querySelectorAll('select[name="client"], select.client-select');
+                    
+                    clientDropdowns.forEach(function(dropdown) {
+                        // Bewaar huidige selectie
+                        var selectedValue = dropdown.value;
+                        
+                        // Leeg de dropdown maar behoud de eerste optie (als die er is)
+                        var firstOption = dropdown.querySelector('option:first-child');
+                        dropdown.innerHTML = '';
+                        
+                        if (firstOption) {
+                            dropdown.appendChild(firstOption);
+                        }
+                        
+                        // Voeg clients toe aan dropdown
+                        clients.forEach(function(client) {
+                            var option = document.createElement('option');
+                            option.value = client.id;
+                            option.textContent = client.name;
+                            dropdown.appendChild(option);
+                        });
+                        
+                        // Herstel selectie indien mogelijk
+                        if (selectedValue) {
+                            dropdown.value = selectedValue;
+                        }
+                    });
+                }
                 
                 // Functie om clients tabel bij te werken
                 function updateClientsTable() {
@@ -1720,7 +1783,26 @@ ul {
                         btn.onclick = function() {
                             var clientId = this.getAttribute('data-id');
                             console.log('Edit client:', clientId);
-                            // Implementeer edit functionaliteit hier
+                            
+                            // Haal client gegevens op
+                            var clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                            var client = clients.find(function(c) { return c.id === clientId; });
+                            
+                            if (client) {
+                                // Vul formulier met client gegevens
+                                document.getElementById('client-name').value = client.name || '';
+                                document.getElementById('client-contact').value = client.contact || '';
+                                document.getElementById('client-email').value = client.email || '';
+                                document.getElementById('client-phone').value = client.phone || '';
+                                document.getElementById('client-address').value = client.address || '';
+                                
+                                // Markeer formulier als in bewerkmodus
+                                clientFormElement.setAttribute('data-editing-id', clientId);
+                                document.querySelector('.card-title').textContent = 'Edit Client';
+                                
+                                // Toon formulier
+                                clientForm.style.display = 'block';
+                            }
                         };
                     });
                     
