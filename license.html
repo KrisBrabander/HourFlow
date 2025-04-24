@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HourFlow Premium - Licentievalidatie</title>
+    <title>HourFlow Premium - License Verification</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -214,7 +214,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Controleer op URL parameter licentie
+            // Check for license in URL parameters
             const params = new URLSearchParams(window.location.search);
             if (params.get('license')) {
                 console.log('License found in URL parameters');
@@ -222,7 +222,7 @@
                 return;
             }
             
-            // Controleer of gebruiker al een geldige licentie heeft in localStorage
+            // Check if user already has a valid license in localStorage
             const storedKey = localStorage.getItem('hourflow_license');
 
             const verifyButton = document.getElementById('verify-button');
@@ -231,24 +231,24 @@
             const errorMessage = document.getElementById('error-message');
             const successMessage = document.getElementById('success-message');
 
-            // Vul het invoerveld in als er al een licentie is
+            // Fill the input field if there's already a license
             if (storedKey) {
                 licenseInput.value = storedKey;
             }
 
-            // Voeg Enter-toets ondersteuning toe
+            // Add Enter key support
             licenseInput.addEventListener('keyup', function(event) {
                 if (event.key === 'Enter') {
                     verifyButton.click();
                 }
             });
 
-            // Reset licentie knop
+            // Reset license button
             resetButton.addEventListener('click', function() {
-                // Verwijder de licentie uit localStorage
+                // Remove the license from localStorage
                 localStorage.removeItem('hourflow_license');
                 
-                // Leeg het invoerveld
+                // Clear the input field
                 licenseInput.value = '';
                 
                 // Show confirmation
@@ -256,7 +256,7 @@
                 errorMessage.style.display = 'block';
                 successMessage.style.display = 'none';
                 
-                // Verwijder ook eventuele sessie-informatie
+                // Also remove any session information
                 sessionStorage.removeItem('from_license_page');
                 sessionStorage.removeItem('license_redirect_count');
                 sessionStorage.removeItem('on_license_page');
@@ -271,24 +271,24 @@
                     return;
                 }
                 
-                // Toon laadstatus op de knop
+                // Show loading status on the button
                 const originalButtonText = verifyButton.innerHTML;
                 verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating...';
                 verifyButton.disabled = true;
 
                 verifyLicenseKey(licenseKey, false, function() {
-                    // Herstel knop na validatie
+                    // Restore button after validation
                     verifyButton.innerHTML = originalButtonText;
                     verifyButton.disabled = false;
                 });
             });
 
             function verifyLicenseKey(key, isAutoCheck = false, callback = null) {
-                // Verberg berichten initieel
+                // Hide messages initially
                 errorMessage.style.display = 'none';
                 successMessage.style.display = 'none';
                 
-                // Valideer de licentie via de API
+                // Validate the license via the API
                 fetch('/api/verify-license', {
                     method: 'POST',
                     headers: {
@@ -306,78 +306,66 @@
                     if (callback) callback();
                     
                     if (data.valid) {
-                        // Sla de licentiesleutel op
+                        // Save the license key
                         localStorage.setItem('hourflow_license', key);
                         
-                        // Toon succesbericht
+                        // Show success message
                         successMessage.style.display = 'block';
                         
-                        // Directe redirect naar de hoofdapplicatie
-                        successMessage.style.display = 'block';
+                        // Create a form to submit to index.html
+                        const form = document.createElement('form');
+                        form.method = 'GET';
+                        form.action = 'index.html';
                         
-                        // Forceer een harde redirect naar index.html
-                        window.location.href = 'index.html';
+                        // Add a hidden field with the license
+                        const hiddenField = document.createElement('input');
+                        hiddenField.type = 'hidden';
+                        hiddenField.name = 'license';
+                        hiddenField.value = key;
+                        form.appendChild(hiddenField);
                         
-                        // Als dat niet werkt, probeer een andere methode
-                        setTimeout(() => {
-                            if (window.location.pathname.includes('license.html')) {
-                                console.log('Eerste redirect mislukt, probeer alternatieve methode');
-                                window.location.replace('index.html');
-                                
-                                // Als laatste redmiddel, probeer een volledige pagina reload
-                                setTimeout(() => {
-                                    if (window.location.pathname.includes('license.html')) {
-                                        console.log('Laatste poging: volledige URL');
-                                        window.location.href = window.location.origin + '/index.html';
-                                    }
-                                }, 500);
-                            }
-                        }, 1000);
+                        // Add the form to the document and submit it
+                        document.body.appendChild(form);
+                        form.submit();
                     } else {
-                        // Toon foutmelding
-                        errorMessage.textContent = data.message || 'Ongeldige licentiesleutel. Controleer en probeer opnieuw.';
+                        // Show error message
+                        errorMessage.textContent = data.message || 'Invalid license key. Please check and try again.';
                         errorMessage.style.display = 'block';
                     }
                 })
                 .catch(error => {
-                    console.error('Fout bij licentievalidatie:', error);
+                    console.error('Error validating license:', error);
                     if (callback) callback();
                     
-                    // Fallback validatie als API niet beschikbaar is
+                    // Fallback validation if API is not available
                     const testKeys = ['DEMO-KEY-1234', 'TEST-KEY-5678'];
                     const isValidFormat = key.length >= 8 || testKeys.includes(key);
                     
                     if (isValidFormat) {
-                        // Sla de licentiesleutel op
+                        // Save the license key
                         localStorage.setItem('hourflow_license', key);
                         
-                        // Toon succesbericht
+                        // Show success message
                         successMessage.style.display = 'block';
                         
-                        // Directe redirect naar de hoofdapplicatie
-                        successMessage.style.display = 'block';
+                        // Create a form to submit to index.html
+                        const form = document.createElement('form');
+                        form.method = 'GET';
+                        form.action = 'index.html';
                         
-                        // Forceer een harde redirect naar index.html
-                        window.location.href = 'index.html';
+                        // Add a hidden field with the license
+                        const hiddenField = document.createElement('input');
+                        hiddenField.type = 'hidden';
+                        hiddenField.name = 'license';
+                        hiddenField.value = key;
+                        form.appendChild(hiddenField);
                         
-                        // Als dat niet werkt, probeer een andere methode
-                        setTimeout(() => {
-                            if (window.location.pathname.includes('license.html')) {
-                                console.log('Eerste redirect mislukt, probeer alternatieve methode');
-                                window.location.replace('index.html');
-                                
-                                // Als laatste redmiddel, probeer een volledige pagina reload
-                                setTimeout(() => {
-                                    if (window.location.pathname.includes('license.html')) {
-                                        console.log('Laatste poging: volledige URL');
-                                        window.location.href = window.location.origin + '/index.html';
-                                    }
-                                }, 500);
-                            }
-                        }, 1000);
+                        // Add the form to the document and submit it
+                        document.body.appendChild(form);
+                        form.submit();
                     } else {
-                        // Toon foutmelding
-                        errorMessage.textContent = 'Ongeldige licentiesleutel. Controleer en probeer opnieuw.';
+                        // Show error message
+                        errorMessage.textContent = 'Invalid license key. Please check and try again.';
                         errorMessage.style.display = 'block';
                     }
                 });
