@@ -72,25 +72,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Markeer dat we op de licentiepagina zijn
-            sessionStorage.setItem('on_license_page', 'true');
-            
-            // Reset de redirect teller als we handmatig naar de licentiepagina navigeren
-            if (!sessionStorage.getItem('from_license_page')) {
-                sessionStorage.removeItem('license_redirect_count');
-            }
-            
-            // Controleer op redirect-lus
-            const redirectCount = parseInt(sessionStorage.getItem('license_redirect_count') || '0');
-            if (redirectCount > 2) {
-                // Toon een bericht over het probleem
-                document.getElementById('error-message').textContent = 'Probleem met licentievalidatie. Probeer deze testsleutel: DEMO-KEY-1234';
-                document.getElementById('error-message').style.display = 'block';
-                // Reset teller voor een nieuwe start
-                sessionStorage.removeItem('license_redirect_count');
-                return;
-            }
-            
             // Controleer op URL parameter licentie
             const params = new URLSearchParams(window.location.search);
             if (params.get('license')) {
@@ -100,20 +81,23 @@
             }
             
             // Controleer of gebruiker al een geldige licentie heeft in localStorage
+            // maar forceer geen automatische redirect
             const storedKey = localStorage.getItem('hourflow_license');
-            if (storedKey) {
-                // Verifieer de opgeslagen sleutel
-                verifyLicenseKey(storedKey, true);
-            }
 
             const verifyButton = document.getElementById('verify-button');
             const licenseInput = document.getElementById('license-key');
             const errorMessage = document.getElementById('error-message');
             const successMessage = document.getElementById('success-message');
 
+            // Vul het invoerveld in als er al een licentie is
+            if (storedKey) {
+                licenseInput.value = storedKey;
+            }
+
             verifyButton.addEventListener('click', function() {
                 const licenseKey = licenseInput.value.trim();
                 if (!licenseKey) {
+                    errorMessage.textContent = 'Voer een licentiesleutel in';
                     errorMessage.style.display = 'block';
                     successMessage.style.display = 'none';
                     return;
@@ -124,38 +108,65 @@
 
             function verifyLicenseKey(key, isAutoCheck = false) {
                 // Verberg berichten initieel
-                if (!isAutoCheck) {
-                    errorMessage.style.display = 'none';
-                    successMessage.style.display = 'none';
-                }
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'none';
                 
-                // Eenvoudige validatie - controleer of sleutel minstens 8 tekens heeft
-                // of overeenkomt met een van onze testsleutels
-                const testKeys = ['DEMO-KEY-1234', 'TEST-KEY-5678'];
-                const isValidFormat = key.length >= 8 || testKeys.includes(key);
-                
-                if (isValidFormat) {
-                    // Sla de licentiesleutel op
-                    localStorage.setItem('hourflow_license', key);
-                    
-                    // Markeer dat we van de licentiepagina komen
-                    sessionStorage.setItem('from_license_page', 'true');
-                    // Reset redirect teller
-                    sessionStorage.removeItem('license_redirect_count');
-                    
-                    if (!isAutoCheck) {
-                        successMessage.style.display = 'block';
+                // Valideer de licentie via de API
+                fetch('/api/verify-license', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ licenseKey: key })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`API fout: ${response.status}`);
                     }
-                    
-                    // Redirect naar de hoofdapplicatie na een korte vertraging
-                    setTimeout(() => {
-                        window.location.href = '/index.html';
-                    }, isAutoCheck ? 0 : 1500);
-                } else {
-                    if (!isAutoCheck) {
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.valid) {
+                        // Sla de licentiesleutel op
+                        localStorage.setItem('hourflow_license', key);
+                        
+                        // Toon succesbericht
+                        successMessage.style.display = 'block';
+                        
+                        // Redirect naar de hoofdapplicatie na een korte vertraging
+                        setTimeout(() => {
+                            window.location.href = '/index.html';
+                        }, 1500);
+                    } else {
+                        // Toon foutmelding
+                        errorMessage.textContent = 'Ongeldige licentiesleutel. Controleer en probeer opnieuw.';
                         errorMessage.style.display = 'block';
                     }
-                }
+                })
+                .catch(error => {
+                    console.error('Fout bij licentievalidatie:', error);
+                    
+                    // Fallback validatie als API niet beschikbaar is
+                    const testKeys = ['DEMO-KEY-1234', 'TEST-KEY-5678'];
+                    const isValidFormat = key.length >= 8 || testKeys.includes(key);
+                    
+                    if (isValidFormat) {
+                        // Sla de licentiesleutel op
+                        localStorage.setItem('hourflow_license', key);
+                        
+                        // Toon succesbericht
+                        successMessage.style.display = 'block';
+                        
+                        // Redirect naar de hoofdapplicatie na een korte vertraging
+                        setTimeout(() => {
+                            window.location.href = '/index.html';
+                        }, 1500);
+                    } else {
+                        // Toon foutmelding
+                        errorMessage.textContent = 'Ongeldige licentiesleutel. Controleer en probeer opnieuw.';
+                        errorMessage.style.display = 'block';
+                    }
+                });
             }
         });
     </script>
