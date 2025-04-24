@@ -314,7 +314,18 @@
                         
                         // Redirect naar de hoofdapplicatie na een korte vertraging
                         setTimeout(() => {
-                            window.location.href = '/index.html';
+                            // Gebruik window.location.origin om de basis-URL te krijgen
+                            const baseUrl = window.location.origin;
+                            // Redirect naar index.html met absolute URL
+                            window.location.href = `${baseUrl}/index.html`;
+                            
+                            // Als dat niet werkt, probeer na nog een korte vertraging een fallback
+                            setTimeout(() => {
+                                if (window.location.pathname.includes('license.html')) {
+                                    console.log('Fallback redirect naar index.html');
+                                    window.location.replace('./index.html');
+                                }
+                            }, 1000);
                         }, 1500);
                     } else {
                         // Toon foutmelding
@@ -339,7 +350,18 @@
                         
                         // Redirect naar de hoofdapplicatie na een korte vertraging
                         setTimeout(() => {
-                            window.location.href = '/index.html';
+                            // Gebruik window.location.origin om de basis-URL te krijgen
+                            const baseUrl = window.location.origin;
+                            // Redirect naar index.html met absolute URL
+                            window.location.href = `${baseUrl}/index.html`;
+                            
+                            // Als dat niet werkt, probeer na nog een korte vertraging een fallback
+                            setTimeout(() => {
+                                if (window.location.pathname.includes('license.html')) {
+                                    console.log('Fallback redirect naar index.html');
+                                    window.location.replace('./index.html');
+                                }
+                            }, 1000);
                         }, 1500);
                     } else {
                         // Toon foutmelding
