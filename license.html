@@ -1,369 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HourFlow Premium - License Verification</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #3a0ca3;
-            --primary-light: #4361ee;
-            --secondary: #7209b7;
-            --success: #4caf50;
-            --warning: #ff9800;
-            --danger: #f44336;
-            --light: #f8f9fa;
-            --medium: #8d99ae;
-            --dark: #212529;
-            --text: #333333;
-            --border-radius: 8px;
-            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 16px;
-            line-height: 1.5;
-            color: var(--text);
-            background-color: #f5f7fa;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        
-        .license-container {
-            width: 100%;
-            max-width: 500px;
-            padding: 30px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            background-color: white;
-        }
-        
-        .license-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .logo {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .logo h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin: 0;
-        }
-        
-        .premium-badge {
-            font-size: 0.8rem;
-            background-color: var(--secondary);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 10px;
-            margin-top: 5px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--dark);
-        }
-        
-        input[type="text"] {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: var(--border-radius);
-            font-size: 16px;
-            transition: var(--transition);
-        }
-        
-        input[type="text"]:focus {
-            border-color: var(--primary-light);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
-        }
-        
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 15px;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        
-        .btn i {
-            margin-right: 8px;
-        }
-        
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: var(--primary-light);
-        }
-        
-        .btn-secondary {
-            background-color: #e9ecef;
-            color: var(--dark);
-        }
-        
-        .btn-secondary:hover {
-            background-color: #dee2e6;
-        }
-        
-        .message {
-            padding: 12px;
-            border-radius: var(--border-radius);
-            margin-top: 15px;
-            display: none;
-        }
-        
-        .error-message {
-            background-color: rgba(244, 67, 54, 0.1);
-            color: var(--danger);
-            border-left: 3px solid var(--danger);
-        }
-        
-        .success-message {
-            background-color: rgba(76, 175, 80, 0.1);
-            color: var(--success);
-            border-left: 3px solid var(--success);
-        }
-        
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 20px 0;
-            color: var(--medium);
-        }
-        
-        .divider::before,
-        .divider::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background-color: #ddd;
-        }
-        
-        .divider span {
-            padding: 0 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HourFlow Premium - License Verification</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="license-container">
-        <div class="license-header">
-            <div class="logo">
-                <h1>HourFlow</h1>
-                <span class="premium-badge">PREMIUM</span>
-            </div>
-            <h2>License Verification</h2>
-            <p>Enter the license key you received from Gumroad to access the application.</p>
-        </div>
-        
-        <div class="form-group">
-            <label for="license-key">License Key:</label>
-            <input type="text" id="license-key" placeholder="Enter your license key">
-        </div>
-        
-        <button id="verify-button" class="btn btn-primary">
-            <i class="fas fa-key"></i> Verify License
-        </button>
-        
-        <div class="divider"><span>OR</span></div>
-        
-        <a href="https://toolboxdeveloping.gumroad.com/l/HourFlow" target="_blank" class="btn btn-secondary">
-            <i class="fas fa-shopping-cart"></i> Buy HourFlow Premium
-        </a>
-        
-        <div class="divider"><span>TESTING</span></div>
-        
-        <button id="reset-license" class="btn btn-secondary">
-            <i class="fas fa-trash"></i> Reset License (for testing)
-        </button>
-        
-        <div id="error-message" class="message error-message">Invalid license key. Please check and try again.</div>
-        <div id="success-message" class="message success-message">License successfully verified! Redirecting to application...</div>
+  <div class="license-container">
+    <div class="license-header">
+      <div class="logo">
+        <h1>HourFlow</h1>
+        <span class="premium-badge">PREMIUM</span>
+      </div>
+      <h2>License Verification</h2>
+      <p>Enter the license key you received from Gumroad to access the application.</p>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check for license in URL parameters
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('license')) {
-                console.log('License found in URL parameters');
-                verifyLicenseKey(params.get('license'));
-                return;
-            }
-            
-            // Check if user already has a valid license in localStorage
-            const storedKey = localStorage.getItem('hourflow_license');
+    <div class="form-group">
+      <label for="license-key">License Key:</label>
+      <input type="text" id="license-key" placeholder="Enter your license key">
+    </div>
 
-            const verifyButton = document.getElementById('verify-button');
-            const resetButton = document.getElementById('reset-license');
-            const licenseInput = document.getElementById('license-key');
-            const errorMessage = document.getElementById('error-message');
-            const successMessage = document.getElementById('success-message');
+    <button id="verify-button" class="btn btn-primary">
+      <i class="fas fa-key"></i> Verify License
+    </button>
 
-            // Fill the input field if there's already a license
-            if (storedKey) {
-                licenseInput.value = storedKey;
-            }
+    <div class="divider"><span>OR</span></div>
 
-            // Add Enter key support
-            licenseInput.addEventListener('keyup', function(event) {
-                if (event.key === 'Enter') {
-                    verifyButton.click();
-                }
-            });
+    <a href="https://toolboxdeveloping.gumroad.com/l/HourFlow" target="_blank" class="btn btn-secondary">
+      <i class="fas fa-shopping-cart"></i> Buy HourFlow Premium
+    </a>
 
-            // Reset license button
-            resetButton.addEventListener('click', function() {
-                // Remove the license from localStorage
-                localStorage.removeItem('hourflow_license');
-                
-                // Clear the input field
-                licenseInput.value = '';
-                
-                // Show confirmation
-                errorMessage.textContent = 'License has been reset. You can now test again.';
-                errorMessage.style.display = 'block';
-                successMessage.style.display = 'none';
-                
-                // Also remove any session information
-                sessionStorage.removeItem('from_license_page');
-                sessionStorage.removeItem('license_redirect_count');
-                sessionStorage.removeItem('on_license_page');
-            });
+    <div class="divider"><span>TESTING</span></div>
 
-            verifyButton.addEventListener('click', function() {
-                const licenseKey = licenseInput.value.trim();
-                if (!licenseKey) {
-                    errorMessage.textContent = 'Please enter a license key';
-                    errorMessage.style.display = 'block';
-                    successMessage.style.display = 'none';
-                    return;
-                }
-                
-                // Show loading status on the button
-                const originalButtonText = verifyButton.innerHTML;
-                verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating...';
-                verifyButton.disabled = true;
+    <button id="reset-license" class="btn btn-secondary">
+      <i class="fas fa-trash"></i> Reset License (for testing)
+    </button>
 
-                verifyLicenseKey(licenseKey, false, function() {
-                    // Restore button after validation
-                    verifyButton.innerHTML = originalButtonText;
-                    verifyButton.disabled = false;
-                });
-            });
+    <div id="error-message" class="message error-message" style="display: none;"></div>
+    <div id="success-message" class="message success-message" style="display: none;"></div>
+  </div>
 
-            async function verifyLicenseKey(key, isAutoCheck = false, callback = null) {
-                // Hide messages initially
-                errorMessage.style.display = 'none';
-                successMessage.style.display = 'none';
-                
-                // Lijst met geldige wachtwoorden voor offline verificatie
-                const validPasswords = [
-                    'HourFlow2025Premium!',  // Hoofdwachtwoord
-                    'DEMO-KEY-1234',        // Demo sleutel
-                    'TEST-KEY-5678',        // Test sleutel
-                    'HOUR-FLOW-2025-PREMIUM', // Legacy sleutel
-                    'HOUR-FLOW-2025-STANDARD'  // Legacy sleutel
-                ];
-                
-                // Eerst lokaal controleren voor snelle verificatie
-                if (validPasswords.includes(key)) {
-                    console.log('License key verified locally');
-                    acceptLicense(key);
-                    if (callback) callback();
-                    return;
-                }
-                
-                // Controleer of de licentie al eerder is geverifieerd
-                const verifiedLicense = localStorage.getItem('hourflow_verified_license');
-                if (verifiedLicense === key) {
-                    console.log('Using previously verified license key');
-                    acceptLicense(key);
-                    if (callback) callback();
-                    return;
-                }
-                
-                // Probeer te verifiëren via de API
-                try {
-                    console.log('Verifying license via API...');
-                    // Bepaal het juiste pad voor de API call
-                    const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-                    const apiUrl = basePath + 'api/verify-license';
-                    
-                    // Simuleer een API call voor client-side verificatie
-                    // In een echte implementatie zou dit een echte API call zijn
-                    console.log('API verification would call:', apiUrl);
-                    
-                    // Voor deze implementatie accepteren we elke sleutel die er geldig uitziet
-                    if (key && key.length >= 8) {
-                        // Sla de geverifieerde licentie op voor toekomstig gebruik
-                        localStorage.setItem('hourflow_verified_license', key);
-                        acceptLicense(key);
-                        if (callback) callback();
-                        return;
-                    }
-                } catch (error) {
-                    console.error('Error verifying license:', error);
-                }
-                
-                // Als we hier komen, is de sleutel ongeldig
-                errorMessage.textContent = 'Invalid license key. Please check and try again.';
-                errorMessage.style.display = 'block';
-                if (callback) callback();
-            }
-            
-            function acceptLicense(key) {
-                // Save the license key
-                localStorage.setItem('hourflow_license', key);
-                
-                // Reset de licentiecontrole flag
-                sessionStorage.removeItem('license_check_in_progress');
-                
-                // Show success message
-                successMessage.style.display = 'block';
-                successMessage.textContent = 'License successfully verified! Redirecting to application...';
-                
-                // Gebruik een timeout om de gebruiker de melding te laten zien
-                setTimeout(function() {
-                    // Bepaal het juiste pad voor de redirect
-                    const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-                    const indexPath = basePath + 'index.html';
-                    console.log('Redirecting to app:', indexPath);
-                    window.location.href = indexPath;
-                }, 1000);
-            }
-        });
-    </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const params = new URLSearchParams(window.location.search);
+  const verifyButton = document.getElementById('verify-button');
+  const resetButton = document.getElementById('reset-license');
+  const licenseInput = document.getElementById('license-key');
+  const errorMessage = document.getElementById('error-message');
+  const successMessage = document.getElementById('success-message');
+
+  if (params.get('license')) {
+    verifyLicenseKey(params.get('license'));
+    return;
+  }
+
+  // Check if already stored
+  const storedKey = localStorage.getItem('hourflow_license');
+  if (storedKey) {
+    licenseInput.value = storedKey;
+  }
+
+  verifyButton.addEventListener('click', function() {
+    const licenseKey = licenseInput.value.trim();
+    if (!licenseKey) {
+      showError('Please enter a license key.');
+      return;
+    }
+    verifyLicenseKey(licenseKey);
+  });
+
+  resetButton.addEventListener('click', function() {
+    localStorage.removeItem('hourflow_license');
+    localStorage.removeItem('hourflow_verified_license');
+    licenseInput.value = '';
+    showError('License has been reset.');
+  });
+
+  function showError(msg) {
+    errorMessage.textContent = msg;
+    errorMessage.style.display = 'block';
+    successMessage.style.display = 'none';
+  }
+
+  function showSuccess(msg) {
+    successMessage.textContent = msg;
+    successMessage.style.display = 'block';
+    errorMessage.style.display = 'none';
+  }
+
+  async function verifyLicenseKey(key) {
+    errorMessage.style.display = 'none';
+    successMessage.style.display = 'none';
+
+    // Offline valid keys
+    const validKeys = [
+      'HourFlow2025Premium!',
+      'DEMO-KEY-1234',
+      'TEST-KEY-5678',
+      'HOUR-FLOW-2025-PREMIUM',
+      'HOUR-FLOW-2025-STANDARD'
+    ];
+
+    if (validKeys.includes(key) || (key && key.length >= 8)) {
+      acceptLicense(key);
+    } else {
+      showError('Invalid license key. Please try again.');
+    }
+  }
+
+  function acceptLicense(key) {
+    // SAVE both keys for verification
+    localStorage.setItem('hourflow_license', key);
+    localStorage.setItem('hourflow_verified_license', key);
+
+    showSuccess('License verified! Redirecting to app...');
+
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 1000);
+  }
+});
+</script>
+
 </body>
 </html>
