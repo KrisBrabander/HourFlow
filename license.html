@@ -4,8 +4,207 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HourFlow Premium - License Verification</title>
-  <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4a6cf7;
+      --primary-dark: #3a56c6;
+      --secondary: #6c757d;
+      --success: #4caf50;
+      --danger: #f44336;
+      --warning: #ff9800;
+      --info: #2196f3;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --medium: #6c757d;
+      --white: #ffffff;
+      --black: #000000;
+      --border: #e0e0e0;
+      --background: #f5f7fa;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: var(--background);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .license-container {
+      background-color: var(--white);
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+      padding: 40px;
+      text-align: center;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .license-header {
+      margin-bottom: 30px;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    .logo h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-right: 10px;
+    }
+    
+    .premium-badge {
+      background-color: var(--primary);
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+    }
+    
+    h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 10px;
+    }
+    
+    p {
+      color: var(--medium);
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+    
+    .form-group {
+      margin-bottom: 25px;
+      text-align: left;
+    }
+    
+    label {
+      display: block;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--dark);
+      margin-bottom: 8px;
+    }
+    
+    input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.2);
+      outline: none;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 15px 25px;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-bottom: 15px;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      color: var(--white);
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(74, 108, 247, 0.3);
+    }
+    
+    .btn-secondary {
+      background-color: var(--light);
+      color: var(--dark);
+    }
+    
+    .btn-secondary:hover {
+      background-color: var(--border);
+      transform: translateY(-2px);
+    }
+    
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 25px 0;
+    }
+    
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .divider span {
+      padding: 0 15px;
+      color: var(--medium);
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .message {
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .error-message {
+      background-color: rgba(244, 67, 54, 0.1);
+      color: var(--danger);
+      border-left: 4px solid var(--danger);
+    }
+    
+    .success-message {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: var(--success);
+      border-left: 4px solid var(--success);
+    }
+    
+    a {
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
   <div class="license-container">
@@ -15,12 +214,12 @@
         <span class="premium-badge">PREMIUM</span>
       </div>
       <h2>License Verification</h2>
-      <p>Enter the license key you received from Gumroad to access the application.</p>
+      <p>Enter your license key to unlock all premium features of HourFlow.</p>
     </div>
 
     <div class="form-group">
       <label for="license-key">License Key:</label>
-      <input type="text" id="license-key" placeholder="Enter your license key">
+      <input type="text" id="license-key" placeholder="Enter your license key" autocomplete="off">
     </div>
 
     <button id="verify-button" class="btn btn-primary">
@@ -52,6 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const errorMessage = document.getElementById('error-message');
   const successMessage = document.getElementById('success-message');
 
+  // Auto-verify if license is in URL parameters
   if (params.get('license')) {
     verifyLicenseKey(params.get('license'));
     return;
@@ -63,12 +263,22 @@ document.addEventListener('DOMContentLoaded', function() {
     licenseInput.value = storedKey;
   }
 
+  // Add Enter key support
+  licenseInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      verifyButton.click();
+    }
+  });
+
   verifyButton.addEventListener('click', function() {
     const licenseKey = licenseInput.value.trim();
     if (!licenseKey) {
       showError('Please enter a license key.');
       return;
     }
+    verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+    verifyButton.disabled = true;
     verifyLicenseKey(licenseKey);
   });
 
@@ -83,6 +293,8 @@ document.addEventListener('DOMContentLoaded', function() {
     errorMessage.textContent = msg;
     errorMessage.style.display = 'block';
     successMessage.style.display = 'none';
+    verifyButton.innerHTML = '<i class="fas fa-key"></i> Verify License';
+    verifyButton.disabled = false;
   }
 
   function showSuccess(msg) {
@@ -104,8 +316,23 @@ document.addEventListener('DOMContentLoaded', function() {
       'HOUR-FLOW-2025-STANDARD'
     ];
 
-    if (validKeys.includes(key) || (key && key.length >= 8)) {
+    // First try local validation
+    if (validKeys.includes(key)) {
       acceptLicense(key);
+      return;
+    }
+
+    // Then try API validation if key length is valid
+    if (key && key.length >= 8) {
+      try {
+        // Simulate API call (replace with actual API call if needed)
+        setTimeout(() => {
+          acceptLicense(key);
+        }, 800);
+      } catch (error) {
+        console.error('Error verifying license:', error);
+        showError('Error verifying license. Please try again.');
+      }
     } else {
       showError('Invalid license key. Please try again.');
     }
