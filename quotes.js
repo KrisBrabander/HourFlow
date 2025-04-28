@@ -424,27 +424,100 @@ const quoteGenerator = {
     
     // Update quote items based on time entries
     updateQuoteItemsFromTimeEntries: function(timeEntries, project) {
-        // Update first quote item with project info
-        const descriptionInput = document.getElementById('quote-item-desc-1');
-        const qtyInput = document.getElementById('quote-item-qty-1');
-        const rateInput = document.getElementById('quote-item-rate-1');
-        
-        if (descriptionInput && qtyInput && rateInput) {
-            // Calculate billable hours
-            const billableHours = timeEntries
-                .filter(entry => entry.billable === 'yes')
-                .reduce((sum, entry) => sum + parseFloat(entry.hours || 0), 0);
-            
-            descriptionInput.value = `${project.name} - Professional Services`;
-            qtyInput.value = billableHours > 0 ? billableHours.toFixed(2) : '1';
-            rateInput.value = project.rate || app.state.settings.hourlyRate;
-            
-            // Trigger calculation update
-            const event = new Event('input');
-            rateInput.dispatchEvent(event);
-            
-            console.log('Updated quote item with project details');
+        // Get the quote items container
+        const quoteItemsContainer = document.getElementById('quote-items');
+        if (!quoteItemsContainer) {
+            console.error('Quote items container not found');
+            return;
         }
+        
+        // Filter billable entries
+        const billableEntries = timeEntries.filter(entry => entry.billable === 'yes');
+        
+        if (billableEntries.length === 0) {
+            // If no billable entries, just update with generic info
+            const descriptionInput = document.getElementById('quote-item-desc-1');
+            const qtyInput = document.getElementById('quote-item-qty-1');
+            const rateInput = document.getElementById('quote-item-rate-1');
+            
+            if (descriptionInput && qtyInput && rateInput) {
+                descriptionInput.value = `${project.name} - Professional Services`;
+                qtyInput.value = '1';
+                rateInput.value = project.rate || app.state.settings.hourlyRate;
+                
+                // Trigger calculation update
+                const event = new Event('input');
+                rateInput.dispatchEvent(event);
+            }
+            return;
+        }
+        
+        // Clear existing items
+        quoteItemsContainer.innerHTML = '';
+        
+        // Group entries by description
+        const entriesByDescription = {};
+        billableEntries.forEach(entry => {
+            const key = entry.description || 'Unlabeled Work';
+            if (!entriesByDescription[key]) {
+                entriesByDescription[key] = {
+                    description: key,
+                    hours: 0
+                };
+            }
+            entriesByDescription[key].hours += parseFloat(entry.hours || 0);
+        });
+        
+        // Create quote items for each description
+        let index = 0;
+        Object.values(entriesByDescription).forEach(group => {
+            index++;
+            const itemId = index;
+            const itemHtml = `
+                <div class="quote-item" data-id="${itemId}">
+                    <div class="form-row">
+                        <div class="form-col grow">
+                            <div class="form-group">
+                                <label class="form-label" for="quote-item-desc-${itemId}">Description</label>
+                                <input type="text" class="form-control quote-item-desc" id="quote-item-desc-${itemId}" value="${group.description}" required>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label" for="quote-item-qty-${itemId}">Quantity</label>
+                                <input type="number" class="form-control quote-item-qty" id="quote-item-qty-${itemId}" value="${group.hours.toFixed(2)}" min="0" step="0.5" required>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label" for="quote-item-rate-${itemId}">Rate ($)</label>
+                                <input type="number" class="form-control quote-item-rate" id="quote-item-rate-${itemId}" value="${project.rate || app.state.settings.hourlyRate}" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="form-col amount">
+                            <div class="form-group">
+                                <label class="form-label">Amount</label>
+                                <div class="amount-text">$${(group.hours * (project.rate || app.state.settings.hourlyRate)).toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-icon remove-quote-item">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Add to container
+            quoteItemsContainer.innerHTML += itemHtml;
+        });
+        
+        // Add event listeners to new items
+        this.updateQuoteItemEvents();
+        
+        // Update totals
+        this.updateQuoteTotals();
+        
+        console.log('Updated quote items with detailed time entries');
     },
     
     // Create quote items from time entries
