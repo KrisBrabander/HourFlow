@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HourFlow - Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4a6cf7;
+            --primary-dark: #3a56c6;
+            --secondary: #6c757d;
+            --success: #4caf50;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --info: #2196f3;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --medium: #6c757d;
+            --white: #ffffff;
+            --black: #000000;
+            --border: #e0e0e0;
+            --background: #f5f7fa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--background);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo img {
+            max-width: 150px;
+            height: auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--dark);
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: var(--primary);
+            color: var(--white);
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-google {
+            background-color: #DB4437;
+            margin-bottom: 10px;
+        }
+        
+        .btn-google:hover {
+            background-color: #C53929;
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .divider span {
+            padding: 0 10px;
+            color: var(--medium);
+            font-size: 14px;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .mt-3 {
+            margin-top: 15px;
+        }
+        
+        .text-muted {
+            color: var(--medium);
+            font-size: 14px;
+        }
+        
+        .link {
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .link:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .success-message {
+            color: var(--success);
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        
+        .auth-section {
+            display: block;
+        }
+        
+        #reset-password-section,
+        #signup-section {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>HourFlow</h1>
+        </div>
+        
+        <!-- Login Section -->
+        <div id="login-section" class="auth-section">
+            <h1>Log In to Your Account</h1>
+            
+            <button id="google-login-btn" class="btn btn-google">
+                <i class="fab fa-google"></i> Continue with Google
+            </button>
+            
+            <div class="divider">
+                <span>OR</span>
+            </div>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email" class="form-label">Email</label>
+                    <input type="email" id="login-email" class="form-control" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="login-password" class="form-label">Password</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
+                </div>
+                
+                <div class="forgot-password">
+                    <a href="#" id="forgot-password-link" class="link">Forgot Password?</a>
+                </div>
+                
+                <button type="submit" class="btn">Log In</button>
+                
+                <div id="login-error" class="error-message"></div>
+            </form>
+            
+            <div class="text-center mt-3">
+                <p class="text-muted">Don't have an account? <a href="#" id="signup-link" class="link">Sign Up</a></p>
+            </div>
+        </div>
+        
+        <!-- Sign Up Section -->
+        <div id="signup-section" class="auth-section">
+            <h1>Create an Account</h1>
+            
+            <form id="signup-form">
+                <div class="form-group">
+                    <label for="signup-email" class="form-label">Email</label>
+                    <input type="email" id="signup-email" class="form-control" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signup-password" class="form-label">Password</label>
+                    <input type="password" id="signup-password" class="form-control" placeholder="Enter your password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="signup-confirm-password" class="form-label">Confirm Password</label>
+                    <input type="password" id="signup-confirm-password" class="form-control" placeholder="Confirm your password" required>
+                </div>
+                
+                <button type="submit" class="btn">Sign Up</button>
+                
+                <div id="signup-error" class="error-message"></div>
+                <div id="signup-success" class="success-message"></div>
+            </form>
+            
+            <div class="text-center mt-3">
+                <p class="text-muted">Already have an account? <a href="#" id="login-link" class="link">Log In</a></p>
+            </div>
+        </div>
+        
+        <!-- Reset Password Section -->
+        <div id="reset-password-section" class="auth-section">
+            <h1>Reset Your Password</h1>
+            
+            <form id="reset-password-form">
+                <div class="form-group">
+                    <label for="reset-email" class="form-label">Email</label>
+                    <input type="email" id="reset-email" class="form-control" placeholder="Enter your email" required>
+                </div>
+                
+                <button type="submit" class="btn">Send Reset Link</button>
+                
+                <div id="reset-error" class="error-message"></div>
+                <div id="reset-success" class="success-message"></div>
+            </form>
+            
+            <div class="text-center mt-3">
+                <p class="text-muted"><a href="#" id="back-to-login" class="link">Back to Login</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+      import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyBrMzcoCMN9tXROYdJCMq9iT9NX5IW_fqE",
+        authDomain: "hourflow-54a34.firebaseapp.com",
+        projectId: "hourflow-54a34",
+        storageBucket: "hourflow-54a34.firebasestorage.app",
+        messagingSenderId: "582955946179",
+        appId: "1:582955946179:web:e97d00b0036ff362379276",
+        measurementId: "G-ZNGXWM3FMF"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const auth = getAuth(app);
+      
+      // Make Firebase auth available globally
+      window.firebaseAuth = {
+        auth: auth,
+        createUser: createUserWithEmailAndPassword,
+        signIn: signInWithEmailAndPassword,
+        signOut: signOut,
+        onAuthStateChanged: onAuthStateChanged,
+        GoogleProvider: GoogleAuthProvider,
+        signInWithPopup: signInWithPopup,
+        sendPasswordResetEmail: sendPasswordResetEmail
+      };
+    </script>
+    
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const auth = window.firebaseAuth.auth;
+    const createUser = window.firebaseAuth.createUser;
+    const signIn = window.firebaseAuth.signIn;
+    const signOut = window.firebaseAuth.signOut;
+    const GoogleProvider = new window.firebaseAuth.GoogleProvider();
+    const signInWithPopup = window.firebaseAuth.signInWithPopup;
+    const sendPasswordResetEmail = window.firebaseAuth.sendPasswordResetEmail;
+
+    // Elements
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const resetForm = document.getElementById('reset-password-form');
+    const googleLoginBtn = document.getElementById('google-login-btn');
+    const loginLink = document.getElementById('login-link');
+    const signupLink = document.getElementById('signup-link');
+    const forgotPasswordLink = document.getElementById('forgot-password-link');
+    const backToLoginLink = document.getElementById('back-to-login');
+
+    const loginSection = document.getElementById('login-section');
+    const signupSection = document.getElementById('signup-section');
+    const resetSection = document.getElementById('reset-password-section');
+
+    // Helpers
+    function showSection(section) {
+        loginSection.style.display = 'none';
+        signupSection.style.display = 'none';
+        resetSection.style.display = 'none';
+        section.style.display = 'block';
+    }
+
+    // Login
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            signIn(auth, email, password)
+                .then(() => {
+                    window.location.href = 'index.html';
+                })
+                .catch((err) => {
+                    alert('Login failed: ' + err.message);
+                });
+        });
+    }
+
+    // Sign up
+    if (signupForm) {
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match.');
+                return;
+            }
+
+            createUser(auth, email, password)
+                .then(() => {
+                    alert('Account created! Please log in.');
+                    showSection(loginSection);
+                })
+                .catch((err) => {
+                    alert('Signup failed: ' + err.message);
+                });
+        });
+    }
+
+    // Reset password
+    if (resetForm) {
+        resetForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('reset-email').value;
+            sendPasswordResetEmail(auth, email)
+                .then(() => {
+                    alert('Password reset email sent.');
+                    showSection(loginSection);
+                })
+                .catch((err) => {
+                    alert('Reset failed: ' + err.message);
+                });
+        });
+    }
+
+    // Google login
+    if (googleLoginBtn) {
+        googleLoginBtn.addEventListener('click', () => {
+            signInWithPopup(auth, GoogleProvider)
+                .then(() => {
+                    window.location.href = 'index.html';
+                })
+                .catch((err) => {
+                    alert('Google login failed: ' + err.message);
+                });
+        });
+    }
+
+    // Navigation between forms
+    if (signupLink) {
+        signupLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSection(signupSection);
+        });
+    }
+
+    if (loginLink) {
+        loginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSection(loginSection);
+        });
+    }
+
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSection(resetSection);
+        });
+    }
+
+    if (backToLoginLink) {
+        backToLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSection(loginSection);
+        });
+    }
+});
+</script>
+
+</body>
+</html>
