@@ -1783,7 +1783,27 @@ ul {
       const analytics = firebase.analytics();
       
       // Setup logout button
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('DOMContentLoaded', function () {
+        // Initialiseer app state object als het nog niet bestaat
+        if (!window.app) {
+            window.app = {
+                state: {
+                    clients: [],
+                    projects: [],
+                    timeEntries: [],
+                    quotes: [],
+                    invoices: []
+                }
+            };
+        }
+        
+        const auth = window.firebaseAuth.auth;
+        const createUser = window.firebaseAuth.createUser;
+        const signIn = window.firebaseAuth.signIn;
+        
+        // Check license status
+        checkLicenseStatus();
+        
         const logoutButton = document.getElementById('logout-button');
         if (logoutButton) {
           logoutButton.addEventListener('click', function() {
@@ -1942,7 +1962,7 @@ ul {
                 var closeBtn = document.querySelector('.close-client-form');
                 var clientFormElement = document.getElementById('client-form');
                 var clientsTable = document.getElementById('clients-table');
-                var clientDropdowns = document.querySelectorAll('select[name="client"], select.client-select');
+                var clientDropdowns = document.querySelectorAll('select[name="client"], select.client-select, #project-client-select, #quote-client-select, #invoice-client-select');
                 
                 // Controleer of de elementen bestaan
                 if (!addClientBtn) console.error('Add Client knop niet gevonden');
@@ -2143,6 +2163,22 @@ ul {
                 // Sync localStorage met app state
                 syncClientsWithAppState();
                 
+                // Event listener voor clear all clients knop
+                var clearAllClientsBtn = document.getElementById('clear-all-clients');
+                if (clearAllClientsBtn) {
+                    clearAllClientsBtn.addEventListener('click', function() {
+                        if (confirm('Are you sure you want to delete all clients? This cannot be undone.')) {
+                            localStorage.removeItem('clients');
+                            if (window.app && app.state) {
+                                app.state.clients = [];
+                            }
+                            updateClientsTable();
+                            updateClientDropdowns();
+                            showNotification('All clients have been deleted');
+                        }
+                    });
+                }
+                
                 // Functie om clients tabel bij te werken
                 function updateClientsTable() {
                     if (!clientsTable) return;
@@ -2176,7 +2212,7 @@ ul {
                         if (!client || !client.id || !client.name) return; // Skip ongeldige clients
                         
                         var row = document.createElement('tr');
-                        row.innerHTML = 
+                        row.innerHTML = `
                             <td>${client.name || '-'}</td>
                             <td>${client.contact || '-'}</td>
                             <td>${client.email || '-'}</td>
@@ -2189,7 +2225,7 @@ ul {
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </td>
-                        ;
+                        `;
                         tableBody.appendChild(row);
                     });
                     
@@ -2306,8 +2342,13 @@ ul {
                 // Functie om client dropdowns bij te werken
                 function updateClientDropdowns() {
                     // Zoek alle client dropdowns
-                    var dropdowns = document.querySelectorAll('select[name="client"], select.client-select');
-                    if (!dropdowns || dropdowns.length === 0) return;
+                    var dropdowns = document.querySelectorAll('select[name="client"], select.client-select, #project-client-select, #quote-client-select, #invoice-client-select');
+                    if (!dropdowns || dropdowns.length === 0) {
+                        console.log('Geen client dropdowns gevonden');
+                        return;
+                    }
+                    
+                    console.log('Updating client dropdowns:', dropdowns.length, 'found');
                     
                     // Haal clients op uit localStorage
                     var clients = [];
@@ -2351,6 +2392,19 @@ ul {
                 
                 // Synchroniseer clients tussen localStorage en app state
                 function syncClientsWithAppState() {
+                    if (!window.app || !app.state) {
+                        console.error('App state niet beschikbaar, initialiseren...');
+                        window.app = {
+                            state: {
+                                clients: [],
+                                projects: [],
+                                timeEntries: [],
+                                quotes: [],
+                                invoices: []
+                            }
+                        };
+                    }
+                    
                     // Haal clients op uit localStorage
                     var clients = [];
                     try {
@@ -2362,12 +2416,8 @@ ul {
                     }
                     
                     // Update app state
-                    if (window.app && app.state) {
-                        app.state.clients = clients;
-                        console.log('App state gesynchroniseerd met localStorage:', clients.length, 'clients');
-                    } else {
-                        console.error('App state niet gevonden voor synchronisatie!');
-                    }
+                    app.state.clients = clients;
+                    console.log('App state clients gesynchroniseerd:', app.state.clients.length, 'clients');
                 }
                 
                 // Helper functie voor notificaties
