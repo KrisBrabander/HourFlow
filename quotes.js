@@ -534,7 +534,6 @@ const quoteGenerator = {
         
         // Show notification
         showNotification('Quote items created from time entries');
-    }
     },
     
     // Generate quote number
