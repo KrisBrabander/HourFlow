@@ -328,16 +328,24 @@ const invoiceGenerator = {
             console.log('Set client to:', project.client);
         }
         
-        // Calculate total hours for this project
-        let totalHours = 0;
+        // Get time entries for this project
         let timeEntries = [];
+        let totalHours = 0;
         try {
-            timeEntries = JSON.parse(localStorage.getItem('timeEntries') || '[]');
-            const projectEntries = timeEntries.filter(entry => entry.project === projectId);
-            totalHours = projectEntries.reduce((sum, entry) => sum + parseFloat(entry.hours || 0), 0);
-            console.log('Project has', totalHours, 'total hours');
+            const allTimeEntries = JSON.parse(localStorage.getItem('timeEntries') || '[]');
+            timeEntries = allTimeEntries.filter(entry => entry.project === projectId);
+            
+            // Sort by date (newest first)
+            timeEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Calculate total hours
+            totalHours = timeEntries.reduce((sum, entry) => sum + parseFloat(entry.hours || 0), 0);
+            console.log('Project has', timeEntries.length, 'time entries totaling', totalHours, 'hours');
+            
+            // Display time entries in the time entries section
+            this.displayTimeEntries(timeEntries, project.name);
         } catch (e) {
-            console.error('Error calculating project hours:', e);
+            console.error('Error processing time entries:', e);
         }
         
         // Update project hours
@@ -362,48 +370,116 @@ const invoiceGenerator = {
             return;
         }
         
-        // Clear existing items
-        invoiceItemsContainer.innerHTML = '';
+        // Get time entries for this project
+        let timeEntries = [];
+        try {
+            const allTimeEntries = JSON.parse(localStorage.getItem('timeEntries') || '[]');
+            timeEntries = allTimeEntries.filter(entry => entry.project === project.id && entry.billable === 'yes');
+        } catch (e) {
+            console.error('Error getting time entries:', e);
+        }
         
-        // Create new item
-        const itemId = 1;
-        const itemHtml = `
-            <div class="invoice-item" data-id="${itemId}">
-                <div class="form-row">
-                    <div class="form-col grow">
-                        <div class="form-group">
-                            <label class="form-label" for="invoice-item-desc-${itemId}">Description</label>
-                            <input type="text" class="form-control invoice-item-desc" id="invoice-item-desc-${itemId}" value="${project.name} - Professional Services" required>
+        // If we have time entries, group them by description
+        if (timeEntries.length > 0) {
+            // Clear existing items
+            invoiceItemsContainer.innerHTML = '';
+            
+            // Group entries by description
+            const entriesByDescription = {};
+            timeEntries.forEach(entry => {
+                const key = entry.description || 'Unlabeled Work';
+                if (!entriesByDescription[key]) {
+                    entriesByDescription[key] = {
+                        description: key,
+                        hours: 0
+                    };
+                }
+                entriesByDescription[key].hours += parseFloat(entry.hours || 0);
+            });
+            
+            // Create invoice items for each description
+            let index = 0;
+            Object.values(entriesByDescription).forEach(group => {
+                index++;
+                const itemId = index;
+                const itemHtml = `
+                    <div class="invoice-item" data-id="${itemId}">
+                        <div class="form-row">
+                            <div class="form-col grow">
+                                <div class="form-group">
+                                    <label class="form-label" for="invoice-item-desc-${itemId}">Description</label>
+                                    <input type="text" class="form-control invoice-item-desc" id="invoice-item-desc-${itemId}" value="${group.description}" required>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label class="form-label" for="invoice-item-qty-${itemId}">Quantity</label>
+                                    <input type="number" class="form-control invoice-item-qty" id="invoice-item-qty-${itemId}" value="${group.hours.toFixed(2)}" min="0" step="0.5" required>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label class="form-label" for="invoice-item-rate-${itemId}">Rate ($)</label>
+                                    <input type="number" class="form-control invoice-item-rate" id="invoice-item-rate-${itemId}" value="${project.rate || app.state.settings.hourlyRate}" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="form-col amount">
+                                <div class="form-group">
+                                    <label class="form-label">Amount</label>
+                                    <div class="amount-text">$${(group.hours * (project.rate || app.state.settings.hourlyRate)).toFixed(2)}</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-icon remove-invoice-item">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="form-col">
-                        <div class="form-group">
-                            <label class="form-label" for="invoice-item-qty-${itemId}">Quantity</label>
-                            <input type="number" class="form-control invoice-item-qty" id="invoice-item-qty-${itemId}" value="${totalHours.toFixed(2)}" min="0" step="0.5" required>
+                `;
+                
+                // Add to container
+                invoiceItemsContainer.innerHTML += itemHtml;
+            });
+        } else {
+            // No time entries, create a default item
+            const itemId = 1;
+            const itemHtml = `
+                <div class="invoice-item" data-id="${itemId}">
+                    <div class="form-row">
+                        <div class="form-col grow">
+                            <div class="form-group">
+                                <label class="form-label" for="invoice-item-desc-${itemId}">Description</label>
+                                <input type="text" class="form-control invoice-item-desc" id="invoice-item-desc-${itemId}" value="${project.name} - Professional Services" required>
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-col">
-                        <div class="form-group">
-                            <label class="form-label" for="invoice-item-rate-${itemId}">Rate ($)</label>
-                            <input type="number" class="form-control invoice-item-rate" id="invoice-item-rate-${itemId}" value="${project.rate || app.state.settings.hourlyRate}" min="0" step="0.01" required>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label" for="invoice-item-qty-${itemId}">Quantity</label>
+                                <input type="number" class="form-control invoice-item-qty" id="invoice-item-qty-${itemId}" value="${totalHours.toFixed(2)}" min="0" step="0.5" required>
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-col amount">
-                        <div class="form-group">
-                            <label class="form-label">Amount</label>
-                            <div class="amount-text">$${(totalHours * (project.rate || app.state.settings.hourlyRate)).toFixed(2)}</div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label" for="invoice-item-rate-${itemId}">Rate ($)</label>
+                                <input type="number" class="form-control invoice-item-rate" id="invoice-item-rate-${itemId}" value="${project.rate || app.state.settings.hourlyRate}" min="0" step="0.01" required>
+                            </div>
                         </div>
+                        <div class="form-col amount">
+                            <div class="form-group">
+                                <label class="form-label">Amount</label>
+                                <div class="amount-text">$${(totalHours * (project.rate || app.state.settings.hourlyRate)).toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-icon remove-invoice-item">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
-                    <button type="button" class="btn-icon remove-invoice-item">
-                        <i class="fas fa-trash"></i>
-                    </button>
                 </div>
-            </div>
-        `;
+            `;
+            
+            invoiceItemsContainer.innerHTML = itemHtml;
+        }
         
-        invoiceItemsContainer.innerHTML = itemHtml;
-        
-        // Add event listeners to new item
+        // Add event listeners to new items
         this.addInvoiceItemEventListeners();
         
         // Update totals
@@ -1119,6 +1195,307 @@ const invoiceGenerator = {
             // Show notification
             showNotification('Time entries added to invoice');
         });
+    },
+    
+    // Display time entries in the time entries section
+    displayTimeEntries: function(timeEntries, projectName) {
+        // Create or get the time entries section
+        let timeEntriesSection = document.getElementById('invoice-time-entries-section');
+        
+        if (!timeEntriesSection) {
+            // Create the section if it doesn't exist
+            const invoiceForm = document.querySelector('.invoice-form .card-body');
+            if (!invoiceForm) return;
+            
+            // Create the time entries section
+            timeEntriesSection = document.createElement('div');
+            timeEntriesSection.id = 'invoice-time-entries-section';
+            timeEntriesSection.className = 'time-entries-section';
+            
+            // Create the heading
+            const heading = document.createElement('h4');
+            heading.textContent = 'Time Entries';
+            timeEntriesSection.appendChild(heading);
+            
+            // Create the table container
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'table-container';
+            timeEntriesSection.appendChild(tableContainer);
+            
+            // Insert the section before the invoice items section
+            const invoiceItemsHeading = invoiceForm.querySelector('h4');
+            if (invoiceItemsHeading) {
+                invoiceForm.insertBefore(timeEntriesSection, invoiceItemsHeading);
+            } else {
+                invoiceForm.appendChild(timeEntriesSection);
+            }
+            
+            // Add styles for the time entries section
+            const style = document.createElement('style');
+            style.textContent = `
+                .time-entries-section {
+                    margin: 20px 0;
+                    padding: 15px;
+                    background-color: #f8f9fa;
+                    border-radius: 5px;
+                    border: 1px solid #e0e0e0;
+                }
+                .time-entries-section h4 {
+                    margin-bottom: 15px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .time-entries-section .toggle-entries {
+                    font-size: 14px;
+                    color: #4a6cf7;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                }
+                .time-entries-section .toggle-entries i {
+                    margin-right: 5px;
+                }
+                .time-entries-section .table-container {
+                    max-height: 300px;
+                    overflow-y: auto;
+                    margin-bottom: 10px;
+                }
+                .time-entries-section table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                .time-entries-section th, .time-entries-section td {
+                    padding: 8px 12px;
+                    text-align: left;
+                    border-bottom: 1px solid #e0e0e0;
+                }
+                .time-entries-section th {
+                    background-color: #f0f0f0;
+                    font-weight: 600;
+                }
+                .time-entries-section .summary {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 10px;
+                    font-weight: 500;
+                }
+                .time-entries-section .use-entries-btn {
+                    background-color: #4a6cf7;
+                    color: white;
+                    border: none;
+                    padding: 8px 15px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    margin-top: 10px;
+                }
+                .time-entries-section .use-entries-btn:hover {
+                    background-color: #3a56c6;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Get the table container
+        const tableContainer = timeEntriesSection.querySelector('.table-container');
+        if (!tableContainer) return;
+        
+        // Update the heading with toggle button
+        let heading = timeEntriesSection.querySelector('h4');
+        if (heading) {
+            heading.innerHTML = `Time Entries for ${projectName} <span class="toggle-entries" id="toggle-time-entries"><i class="fas fa-chevron-down"></i> <span id="toggle-text">Hide</span></span>`;
+            
+            // Add toggle functionality
+            const toggleBtn = heading.querySelector('#toggle-time-entries');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    const tableContainer = document.querySelector('#invoice-time-entries-section .table-container');
+                    const toggleText = document.getElementById('toggle-text');
+                    const icon = this.querySelector('i');
+                    
+                    if (tableContainer.style.display === 'none') {
+                        tableContainer.style.display = 'block';
+                        toggleText.textContent = 'Hide';
+                        icon.className = 'fas fa-chevron-down';
+                    } else {
+                        tableContainer.style.display = 'none';
+                        toggleText.textContent = 'Show';
+                        icon.className = 'fas fa-chevron-right';
+                    }
+                });
+            }
+        }
+        
+        // Clear the table container
+        tableContainer.innerHTML = '';
+        
+        if (timeEntries.length === 0) {
+            tableContainer.innerHTML = '<p class="text-center">No time entries found for this project.</p>';
+            return;
+        }
+        
+        // Create the table
+        const table = document.createElement('table');
+        table.className = 'time-entries-table';
+        
+        // Create the table header
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Hours</th>
+                <th>Billable</th>
+            </tr>
+        `;
+        table.appendChild(thead);
+        
+        // Create the table body
+        const tbody = document.createElement('tbody');
+        
+        // Add time entries to the table
+        let billableHours = 0;
+        let nonBillableHours = 0;
+        
+        timeEntries.forEach(entry => {
+            const row = document.createElement('tr');
+            
+            // Format date
+            const date = new Date(entry.date);
+            const formattedDate = date.toLocaleDateString();
+            
+            // Track billable hours
+            const hours = parseFloat(entry.hours || 0);
+            if (entry.billable === 'yes') {
+                billableHours += hours;
+            } else {
+                nonBillableHours += hours;
+            }
+            
+            row.innerHTML = `
+                <td>${formattedDate}</td>
+                <td>${entry.description}</td>
+                <td>${hours.toFixed(2)}</td>
+                <td>${entry.billable === 'yes' ? 'Yes' : 'No'}</td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+        
+        table.appendChild(tbody);
+        tableContainer.appendChild(table);
+        
+        // Add summary information
+        const summary = document.createElement('div');
+        summary.className = 'summary';
+        summary.innerHTML = `
+            <div>Total Entries: ${timeEntries.length}</div>
+            <div>Billable Hours: ${billableHours.toFixed(2)}</div>
+            <div>Non-Billable Hours: ${nonBillableHours.toFixed(2)}</div>
+            <div>Total Hours: ${(billableHours + nonBillableHours).toFixed(2)}</div>
+        `;
+        
+        // Add a button to use time entries for invoice items
+        const useEntriesBtn = document.createElement('button');
+        useEntriesBtn.className = 'use-entries-btn';
+        useEntriesBtn.textContent = 'Use Time Entries as Invoice Items';
+        useEntriesBtn.addEventListener('click', () => {
+            this.createInvoiceItemsFromTimeEntries(timeEntries);
+        });
+        
+        // Add the summary and button to the section
+        timeEntriesSection.appendChild(summary);
+        timeEntriesSection.appendChild(useEntriesBtn);
+    },
+    
+    // Create invoice items from time entries
+    createInvoiceItemsFromTimeEntries: function(timeEntries) {
+        // Clear existing invoice items except the first one
+        const invoiceItems = document.getElementById('invoice-items');
+        while (invoiceItems.children.length > 1) {
+            invoiceItems.removeChild(invoiceItems.lastChild);
+        }
+        
+        // Group time entries by description
+        const entriesByDescription = {};
+        
+        timeEntries.forEach(entry => {
+            if (entry.billable !== 'yes') return; // Skip non-billable entries
+            
+            const key = entry.description;
+            if (!entriesByDescription[key]) {
+                entriesByDescription[key] = {
+                    description: entry.description,
+                    hours: 0
+                };
+            }
+            
+            entriesByDescription[key].hours += parseFloat(entry.hours || 0);
+        });
+        
+        // Get project rate
+        const projectSelect = document.getElementById('invoice-project-select');
+        let rate = app.state.settings.hourlyRate || 0;
+        
+        if (projectSelect && projectSelect.value) {
+            try {
+                const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+                const project = projects.find(p => p.id === projectSelect.value);
+                if (project && project.rate) {
+                    rate = project.rate;
+                }
+            } catch (e) {
+                console.error('Error getting project rate:', e);
+            }
+        }
+        
+        // Create invoice items for each description group
+        let index = 1;
+        Object.values(entriesByDescription).forEach((group, i) => {
+            if (i === 0) {
+                // Update first item
+                const descInput = document.getElementById('invoice-item-desc-1');
+                const qtyInput = document.getElementById('invoice-item-qty-1');
+                const rateInput = document.getElementById('invoice-item-rate-1');
+                
+                if (descInput && qtyInput && rateInput) {
+                    descInput.value = group.description;
+                    qtyInput.value = group.hours.toFixed(2);
+                    rateInput.value = rate;
+                    
+                    // Trigger calculation update
+                    const event = new Event('input');
+                    rateInput.dispatchEvent(event);
+                }
+            } else {
+                // Add new items for additional groups
+                index++;
+                this.addInvoiceItem();
+                
+                setTimeout(() => {
+                    const descInput = document.getElementById(`invoice-item-desc-${index}`);
+                    const qtyInput = document.getElementById(`invoice-item-qty-${index}`);
+                    const rateInput = document.getElementById(`invoice-item-rate-${index}`);
+                    
+                    if (descInput && qtyInput && rateInput) {
+                        descInput.value = group.description;
+                        qtyInput.value = group.hours.toFixed(2);
+                        rateInput.value = rate;
+                        
+                        // Trigger calculation update
+                        const event = new Event('input');
+                        rateInput.dispatchEvent(event);
+                    }
+                }, 100);
+            }
+        });
+        
+        // Update invoice totals
+        this.updateInvoiceTotals();
+        
+        // Show notification
+        showNotification('Invoice items created from time entries');
     },
     
     // Show change status modal
