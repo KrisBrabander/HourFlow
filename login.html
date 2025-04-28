@@ -161,6 +161,36 @@
             text-decoration: underline;
         }
         
+        .license-status {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .license-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            background-color: var(--light);
+            color: var(--medium);
+            transition: all 0.3s ease;
+        }
+        
+        .license-badge.valid {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success);
+        }
+        
+        .license-badge.invalid {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--danger);
+        }
+        
+        .license-badge i {
+            margin-right: 5px;
+        }
+        
         .error-message {
             color: var(--danger);
             font-size: 14px;
@@ -199,6 +229,11 @@
         <!-- Login Section -->
         <div id="login-section" class="auth-section">
             <h1>Log In to Your Account</h1>
+            <div class="license-status" id="license-status">
+                <div class="license-badge" id="license-badge">
+                    <i class="fas fa-key"></i> <span id="license-text">Checking license...</span>
+                </div>
+            </div>
             
             <button id="google-login-btn" class="btn btn-google">
                 <i class="fab fa-google"></i> Continue with Google
@@ -327,6 +362,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const auth = window.firebaseAuth.auth;
     const createUser = window.firebaseAuth.createUser;
     const signIn = window.firebaseAuth.signIn;
+    
+    // Check license status
+    checkLicenseStatus();
     const signOut = window.firebaseAuth.signOut;
     const GoogleProvider = new window.firebaseAuth.GoogleProvider();
     const signInWithPopup = window.firebaseAuth.signInWithPopup;
@@ -354,6 +392,32 @@ document.addEventListener('DOMContentLoaded', function () {
         section.style.display = 'block';
     }
 
+    // Check license status function
+    function checkLicenseStatus() {
+        const licenseStatus = document.getElementById('license-status');
+        const licenseBadge = document.getElementById('license-badge');
+        const licenseText = document.getElementById('license-text');
+        
+        if (!licenseStatus || !licenseBadge || !licenseText) return;
+        
+        const licenseKey = localStorage.getItem('hourflow_license');
+        const verifiedLicense = localStorage.getItem('hourflow_verified_license');
+        
+        if (licenseKey && verifiedLicense && licenseKey === verifiedLicense) {
+            licenseBadge.classList.add('valid');
+            licenseText.innerHTML = 'Premium License Active';
+            licenseBadge.innerHTML = '<i class="fas fa-check-circle"></i> Premium License Active';
+        } else if (licenseKey) {
+            licenseBadge.classList.add('invalid');
+            licenseText.innerHTML = 'License Not Verified';
+            licenseBadge.innerHTML = '<i class="fas fa-exclamation-circle"></i> License Not Verified <a href="license.html" class="link">Verify</a>';
+        } else {
+            licenseBadge.classList.remove('valid', 'invalid');
+            licenseText.innerHTML = 'No License Found';
+            licenseBadge.innerHTML = '<i class="fas fa-key"></i> No License Found <a href="license.html" class="link">Add License</a>';
+        }
+    }
+    
     // Login
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
