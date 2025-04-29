@@ -29,40 +29,49 @@
                 return;
             }
             
-            // Check if a license is stored
-            const licenseKey = localStorage.getItem('hourflow_license');
-            if (!licenseKey) {
-                console.log('No license found, redirecting to license page');
-                window.location.replace('./license.html');
-                return;
-            }
-            
-            // Lokale validatie van licentie (zonder API)
-            const validKeys = [
-                'HourFlow2025Premium!',
-                'DEMO-KEY-1234',
-                'TEST-KEY-5678',
-                'HOUR-FLOW-2025-PREMIUM',
-                'HOUR-FLOW-2025-STANDARD'
-            ];
-            
-            // Controleer eerst of we een geverifieerde licentie hebben
-            const verifiedLicense = localStorage.getItem('hourflow_verified_license');
-            if (verifiedLicense === licenseKey) {
-                console.log('Using previously verified license key');
-                return;
-            }
-            
-            // Controleer of de licentie geldig is
-            if (validKeys.includes(licenseKey) || licenseKey.length >= 8) {
-                console.log('License valid, access granted');
-                // Sla de geverifieerde licentie op
-                localStorage.setItem('hourflow_verified_license', licenseKey);
-            } else {
-                console.log('Invalid license, redirecting to license page');
-                localStorage.removeItem('hourflow_license');
-                window.location.replace('./license.html');
-            }
+            // Controleer licentie bij het laden van de pagina
+            (function() {
+                // Haal licentie op uit localStorage
+                const licenseKey = localStorage.getItem('hourflow_license');
+                const verifiedLicense = localStorage.getItem('hourflow_verified_license');
+                
+                // Als er geen licentie is, ga naar de licentie pagina
+                if (!licenseKey) {
+                    console.log('No license key found, redirecting to license page');
+                    window.location.replace('./license.html');
+                    return;
+                }
+                
+                // Lokale validatie van licentie (zonder API)
+                const validKeys = [
+                    'HourFlow2025Premium!',
+                    'DEMO-KEY-1234',
+                    'TEST-KEY-5678',
+                    'HOUR-FLOW-2025-PREMIUM',
+                    'HOUR-FLOW-2025-STANDARD'
+                ];
+                
+                // Controleer eerst of we een geverifieerde licentie hebben die overeenkomt met de huidige licentie
+                if (verifiedLicense && verifiedLicense === licenseKey) {
+                    console.log('Using previously verified license key');
+                    // Zorg ervoor dat we niet opnieuw naar de licentie pagina gaan
+                    localStorage.setItem('hourflow_verified_license', licenseKey);
+                    return;
+                }
+                
+                // Controleer of de licentie geldig is
+                const isValidKey = validKeys.includes(licenseKey) || licenseKey.length >= 8;
+                if (isValidKey) {
+                    console.log('License valid, access granted');
+                    // Sla de geverifieerde licentie op
+                    localStorage.setItem('hourflow_verified_license', licenseKey);
+                } else {
+                    console.log('Invalid license, redirecting to license page');
+                    localStorage.removeItem('hourflow_license');
+                    localStorage.removeItem('hourflow_verified_license');
+                    window.location.replace('./license.html');
+                }
+            })();
         })();
     </script>
     
