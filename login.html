@@ -424,17 +424,47 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
+            
+            // Show loading state
+            const loginButton = loginForm.querySelector('button[type="submit"]');
+            const originalButtonText = loginButton.innerHTML;
+            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+            loginButton.disabled = true;
+            
             signIn(auth, email, password)
                 .then(() => {
-                    // Set a default license for authenticated users if none exists
-                    if (!localStorage.getItem('hourflow_license')) {
-                        localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
-                        localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
+                    // Set a default license for authenticated users
+                    localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
+                    localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
+                    
+                    // Show success message
+                    const loginSuccess = document.getElementById('login-success') || document.createElement('div');
+                    loginSuccess.className = 'success-message';
+                    loginSuccess.style.display = 'block';
+                    loginSuccess.textContent = 'Login successful! Redirecting to app...';
+                    
+                    if (!document.getElementById('login-success')) {
+                        loginForm.appendChild(loginSuccess);
                     }
-                    window.location.href = 'index.html';
+                    
+                    // Redirect after a short delay
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
                 })
                 .catch((err) => {
-                    alert('Login failed: ' + err.message);
+                    // Reset button
+                    loginButton.innerHTML = originalButtonText;
+                    loginButton.disabled = false;
+                    
+                    // Show error
+                    const loginError = document.getElementById('login-error');
+                    if (loginError) {
+                        loginError.textContent = 'Login failed: ' + err.message;
+                        loginError.style.display = 'block';
+                    } else {
+                        alert('Login failed: ' + err.message);
+                    }
                 });
         });
     }
@@ -482,17 +512,48 @@ document.addEventListener('DOMContentLoaded', function () {
     // Google login
     if (googleLoginBtn) {
         googleLoginBtn.addEventListener('click', () => {
+            // Show loading state
+            const originalButtonText = googleLoginBtn.innerHTML;
+            googleLoginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting with Google...';
+            googleLoginBtn.disabled = true;
+            
             signInWithPopup(auth, GoogleProvider)
                 .then(() => {
-                    // Set a default license for authenticated users if none exists
-                    if (!localStorage.getItem('hourflow_license')) {
-                        localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
-                        localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
+                    // Always set a license for authenticated users
+                    localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
+                    localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
+                    
+                    // Show success message
+                    const loginSuccess = document.getElementById('login-success') || document.createElement('div');
+                    loginSuccess.className = 'success-message';
+                    loginSuccess.style.display = 'block';
+                    loginSuccess.textContent = 'Google login successful! Redirecting to app...';
+                    
+                    if (!document.getElementById('login-success')) {
+                        const loginForm = document.getElementById('login-form');
+                        if (loginForm) {
+                            loginForm.appendChild(loginSuccess);
+                        }
                     }
-                    window.location.href = 'index.html';
+                    
+                    // Redirect after a short delay
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
                 })
                 .catch((err) => {
-                    alert('Google login failed: ' + err.message);
+                    // Reset button
+                    googleLoginBtn.innerHTML = originalButtonText;
+                    googleLoginBtn.disabled = false;
+                    
+                    // Show error
+                    const loginError = document.getElementById('login-error');
+                    if (loginError) {
+                        loginError.textContent = 'Google login failed: ' + err.message;
+                        loginError.style.display = 'block';
+                    } else {
+                        alert('Google login failed: ' + err.message);
+                    }
                 });
         });
     }
