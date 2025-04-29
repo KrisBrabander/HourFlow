@@ -31,6 +31,30 @@
             
             // Controleer licentie bij het laden van de pagina
             (function() {
+                // Controleer eerst of de gebruiker is ingelogd via Firebase
+                const checkUserAuth = function() {
+                    if (window.firebaseAuth && window.firebaseAuth.auth) {
+                        const auth = window.firebaseAuth.auth;
+                        const currentUser = auth.currentUser;
+                        
+                        if (currentUser) {
+                            console.log('User is authenticated with Firebase, granting access');
+                            // Zorg ervoor dat een ingelogde gebruiker altijd een geldige licentie heeft
+                            if (!localStorage.getItem('hourflow_license')) {
+                                localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
+                                localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
+                            }
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+                
+                // Als de gebruiker is ingelogd, hoeven we geen licentie te controleren
+                if (checkUserAuth()) {
+                    return;
+                }
+                
                 // Haal licentie op uit localStorage
                 const licenseKey = localStorage.getItem('hourflow_license');
                 const verifiedLicense = localStorage.getItem('hourflow_verified_license');
@@ -48,7 +72,8 @@
                     'DEMO-KEY-1234',
                     'TEST-KEY-5678',
                     'HOUR-FLOW-2025-PREMIUM',
-                    'HOUR-FLOW-2025-STANDARD'
+                    'HOUR-FLOW-2025-STANDARD',
+                    'AUTH-USER-LICENSE' // Speciale licentie voor ingelogde gebruikers
                 ];
                 
                 // Controleer eerst of we een geverifieerde licentie hebben die overeenkomt met de huidige licentie
