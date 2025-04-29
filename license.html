@@ -354,10 +354,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      showSuccess('License verified! Redirecting to app...');
+      showSuccess('License verified! Redirecting to login...');
 
       setTimeout(() => {
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
       }, 1000);
     } catch (error) {
       console.error('Error saving license:', error);
