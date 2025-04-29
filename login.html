@@ -426,6 +426,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const password = document.getElementById('login-password').value;
             signIn(auth, email, password)
                 .then(() => {
+                    // Set a default license for authenticated users if none exists
+                    if (!localStorage.getItem('hourflow_license')) {
+                        localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
+                        localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
+                    }
                     window.location.href = 'index.html';
                 })
                 .catch((err) => {
@@ -479,6 +484,11 @@ document.addEventListener('DOMContentLoaded', function () {
         googleLoginBtn.addEventListener('click', () => {
             signInWithPopup(auth, GoogleProvider)
                 .then(() => {
+                    // Set a default license for authenticated users if none exists
+                    if (!localStorage.getItem('hourflow_license')) {
+                        localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
+                        localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
+                    }
                     window.location.href = 'index.html';
                 })
                 .catch((err) => {
