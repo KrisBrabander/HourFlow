@@ -343,8 +343,7 @@
       const app = initializeApp(firebaseConfig);
       const analytics = getAnalytics(app);
       const auth = getAuth(app);
-      
-      // Make Firebase auth available globally
+            // Make Firebase auth available globally
       window.firebaseAuth = {
         auth: auth,
         createUser: createUserWithEmailAndPassword,
@@ -355,34 +354,62 @@
         signInWithPopup: signInWithPopup,
         sendPasswordResetEmail: sendPasswordResetEmail
       };
+      
+      // Initialize Firebase functions
+      function initializeFirebase() {
+        // Already initialized above
+        console.log('Firebase already initialized');
+      }
+      
+      // Check authentication state
+      function checkAuthState() {
+        onAuthStateChanged(auth, (user) => {
+          if (user) {
+            // User is signed in
+            console.log('User is signed in:', user.email);
+            showUserInfo(user);
+            // Set a license for authenticated users
+            localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
+            localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
+            localStorage.setItem('hourflow_auth_checked', 'completed');
+          } else {
+            // User is signed out
+            console.log('User is signed out');
+            hideUserInfo();
+          }
+        });
+      }
+      
+      // DOM content loaded event
+      document.addEventListener('DOMContentLoaded', function() {
+        // Check license status
+        checkLicenseStatus();
+        
+        // Check if user is logged in
+        checkAuthState();
+        
+        // Clear the auth_checked flag if we're on the login page
+        // This ensures proper flow between license and login pages
+        if (localStorage.getItem('hourflow_auth_checked') === 'pending') {
+            localStorage.setItem('hourflow_auth_checked', 'completed');
+        }
+      });
     </script>
     
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const auth = window.firebaseAuth.auth;
-    const createUser = window.firebaseAuth.createUser;
-    const signIn = window.firebaseAuth.signIn;
-    
-    // Check license status
-    checkLicenseStatus();
-    const signOut = window.firebaseAuth.signOut;
-    const GoogleProvider = new window.firebaseAuth.GoogleProvider();
-    const signInWithPopup = window.firebaseAuth.signInWithPopup;
-    const sendPasswordResetEmail = window.firebaseAuth.sendPasswordResetEmail;
 
     // Elements
-    const loginForm = document.getElementById('login-form');
+    let loginForm = document.getElementById('login-form');
     const signupForm = document.getElementById('signup-form');
     const resetForm = document.getElementById('reset-password-form');
-    const googleLoginBtn = document.getElementById('google-login-btn');
+    let googleLoginBtn = document.getElementById('google-login');
+    const loginSection = document.getElementById('login-section');
+    const signupSection = document.getElementById('signup-section');
+    const resetSection = document.getElementById('reset-password-section');
     const loginLink = document.getElementById('login-link');
     const signupLink = document.getElementById('signup-link');
     const forgotPasswordLink = document.getElementById('forgot-password-link');
     const backToLoginLink = document.getElementById('back-to-login');
-
-    const loginSection = document.getElementById('login-section');
-    const signupSection = document.getElementById('signup-section');
-    const resetSection = document.getElementById('reset-password-section');
 
     // Helpers
     function showSection(section) {
@@ -392,16 +419,24 @@ document.addEventListener('DOMContentLoaded', function () {
         section.style.display = 'block';
     }
 
-    // Check license status function
+    // Check license status and ensure we don't get redirected back to license page
     function checkLicenseStatus() {
+        // First, ensure we have a valid license for the login page
+        const licenseKey = localStorage.getItem('hourflow_license');
+        const verifiedLicense = localStorage.getItem('hourflow_verified_license');
+        
+        // If no license or not verified, set a temporary one for the login page
+        if (!licenseKey || !verifiedLicense) {
+            localStorage.setItem('hourflow_license', 'LOGIN-PAGE-LICENSE');
+            localStorage.setItem('hourflow_verified_license', 'LOGIN-PAGE-LICENSE');
+        }
+        
+        // Update the license status display
         const licenseStatus = document.getElementById('license-status');
         const licenseBadge = document.getElementById('license-badge');
         const licenseText = document.getElementById('license-text');
         
         if (!licenseStatus || !licenseBadge || !licenseText) return;
-        
-        const licenseKey = localStorage.getItem('hourflow_license');
-        const verifiedLicense = localStorage.getItem('hourflow_verified_license');
         
         if (licenseKey && verifiedLicense && licenseKey === verifiedLicense) {
             licenseBadge.classList.add('valid');
@@ -431,11 +466,12 @@ document.addEventListener('DOMContentLoaded', function () {
             loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
             loginButton.disabled = true;
             
-            signIn(auth, email, password)
+            signInWithEmailAndPassword(auth, email, password)
                 .then(() => {
                     // Set a default license for authenticated users
                     localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
                     localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
+                    localStorage.setItem('hourflow_auth_checked', 'completed');
                     
                     // Show success message
                     const loginSuccess = document.getElementById('login-success') || document.createElement('div');
@@ -517,11 +553,13 @@ document.addEventListener('DOMContentLoaded', function () {
             googleLoginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting with Google...';
             googleLoginBtn.disabled = true;
             
-            signInWithPopup(auth, GoogleProvider)
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider)
                 .then(() => {
                     // Always set a license for authenticated users
                     localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
                     localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
+                    localStorage.setItem('hourflow_auth_checked', 'completed');
                     
                     // Show success message
                     const loginSuccess = document.getElementById('login-success') || document.createElement('div');
