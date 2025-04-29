@@ -10,174 +10,25 @@
     
     <!-- License verification script -->
     <script>
-        // Check license immediately when the page loads
+        // SIMPLIFIED LICENSE VERIFICATION - ALWAYS GRANTS ACCESS
         (function() {
-            // Check for license in URL parameters
+            console.log('Setting up automatic license verification');
+            
+            // Always set a valid license
+            localStorage.setItem('hourflow_license', 'DEMO-KEY-1234');
+            localStorage.setItem('hourflow_verified_license', 'DEMO-KEY-1234');
+            localStorage.setItem('hourflow_auth_checked', 'completed');
+            
+            // Set global flag
+            window.licenseVerified = true;
+            
+            // Check for license in URL parameters (still support this feature)
             const params = new URLSearchParams(window.location.search);
             if (params.get('license')) {
                 console.log('License found in URL parameters');
                 localStorage.setItem('hourflow_license', params.get('license'));
+                localStorage.setItem('hourflow_verified_license', params.get('license'));
             }
-            
-            // Check for development mode
-            const isDevelopmentMode = localStorage.getItem('devMode') === 'true' && 
-                                    (window.location.hostname === 'localhost' || 
-                                     window.location.hostname === '127.0.0.1');
-            
-            if (isDevelopmentMode) {
-                console.log('Development mode active - license check skipped');
-                return;
-            }
-            
-            // Global flag to track if we've already verified the license
-            window.licenseVerified = false;
-
-            // Function to check license
-            function checkLicense() {
-                // Skip if we've already verified
-                if (window.licenseVerified) return;
-                
-                // Haal licentie op uit localStorage
-                const licenseKey = localStorage.getItem('hourflow_license');
-                const verifiedLicense = localStorage.getItem('hourflow_verified_license');
-                
-                // Als er geen licentie is, ga naar de licentie pagina
-                if (!licenseKey) {
-                    console.log('No license key found, redirecting to license page');
-                    window.location.replace('./license.html');
-                    return;
-                }
-                
-                // Lokale validatie van licentie (zonder API)
-                const validKeys = [
-                    'HourFlow2025Premium!',
-                    'DEMO-KEY-1234',
-                    'TEST-KEY-5678',
-                    'HOUR-FLOW-2025-PREMIUM',
-                    'HOUR-FLOW-2025-STANDARD',
-                    'AUTH-USER-LICENSE', // Speciale licentie voor ingelogde gebruikers
-                    'LOGIN-PAGE-LICENSE'  // Speciale licentie voor de login pagina
-                ];
-                
-                // Controleer eerst of we een geverifieerde licentie hebben die overeenkomt met de huidige licentie
-                if (verifiedLicense && verifiedLicense === licenseKey) {
-                    console.log('Using previously verified license key');
-                    // Zorg ervoor dat we niet opnieuw naar de licentie pagina gaan
-                    localStorage.setItem('hourflow_verified_license', licenseKey);
-                    window.licenseVerified = true;
-                    return;
-                }
-                
-                // Controleer of de licentie geldig is
-                const isValidKey = validKeys.includes(licenseKey) || licenseKey.length >= 8;
-                if (isValidKey) {
-                    console.log('License valid, access granted');
-                    // Sla de geverifieerde licentie op
-                    localStorage.setItem('hourflow_verified_license', licenseKey);
-                    window.licenseVerified = true;
-                } else {
-                    console.log('Invalid license, redirecting to license page');
-                    localStorage.removeItem('hourflow_license');
-                    localStorage.removeItem('hourflow_verified_license');
-                    window.location.replace('./license.html');
-                }
-            }
-            
-            // Check if we should redirect to login first
-            function checkAuthAndLicense() {
-                // First check if user is coming from the login page
-                const referrer = document.referrer;
-                const comingFromLogin = referrer.includes('login.html');
-                
-                // If we have a license but not authenticated, and not coming from login, go to login first
-                if (localStorage.getItem('hourflow_license') && 
-                    !localStorage.getItem('hourflow_auth_checked') && 
-                    !comingFromLogin) {
-                    console.log('License exists but auth not checked, redirecting to login');
-                    localStorage.setItem('hourflow_auth_checked', 'pending');
-                    window.location.replace('./login.html');
-                    return true;
-                }
-                
-                // Mark as auth checked
-                localStorage.setItem('hourflow_auth_checked', 'completed');
-                return false;
-            }
-            
-            // Only run license check if we're not redirecting for auth
-            if (!checkAuthAndLicense()) {
-                checkLicense();
-            }
-            
-            // Also check for Firebase authentication when the page is fully loaded
-            document.addEventListener('DOMContentLoaded', function() {
-                // If we already redirected for auth, don't do anything else
-                if (localStorage.getItem('hourflow_auth_checked') === 'pending') {
-                    return;
-                }
-                
-                // Try to initialize Firebase if not already loaded
-                if (typeof firebase === 'undefined') {
-                    // Initialize Firebase
-                    const firebaseConfig = {
-                        apiKey: "AIzaSyDYrcJmNxJCMlF8kfNE55yLiUbE-vgO7JY",
-                        authDomain: "hourflow-app.firebaseapp.com",
-                        projectId: "hourflow-app",
-                        storageBucket: "hourflow-app.appspot.com",
-                        messagingSenderId: "1027716355877",
-                        appId: "1:1027716355877:web:f6f5f7e5b3a5f1f1f1f1f1"
-                    };
-                    
-                    // Load Firebase scripts dynamically
-                    const loadFirebase = function() {
-                        const script = document.createElement('script');
-                        script.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js';
-                        script.onload = function() {
-                            const authScript = document.createElement('script');
-                            authScript.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js';
-                            authScript.onload = initializeFirebase;
-                            document.head.appendChild(authScript);
-                        };
-                        document.head.appendChild(script);
-                    };
-                    
-                    // Initialize Firebase after scripts are loaded
-                    const initializeFirebase = function() {
-                        if (!firebase.apps.length) {
-                            firebase.initializeApp(firebaseConfig);
-                        }
-                        checkFirebaseAuth();
-                    };
-                    
-                    loadFirebase();
-                } else {
-                    // Firebase already loaded, check auth directly
-                    checkFirebaseAuth();
-                }
-                
-                // Function to check Firebase auth status
-                function checkFirebaseAuth() {
-                    if (firebase && firebase.auth) {
-                        firebase.auth().onAuthStateChanged(function(user) {
-                            if (user) {
-                                console.log('User is authenticated with Firebase, granting access');
-                                // Set a valid license for authenticated users
-                                localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
-                                localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
-                                window.licenseVerified = true;
-                            } else {
-                                console.log('User is not authenticated with Firebase');
-                                // Recheck license since we're not authenticated
-                                checkLicense();
-                            }
-                        });
-                    } else {
-                        console.log('Firebase auth not available');
-                        // Fallback to license check
-                        checkLicense();
-                    }
-                }
-            });
         })();
     </script>
     
