@@ -226,16 +226,17 @@
             <h1>HourFlow</h1>
         </div>
         
+        <!-- Loading Message -->
+        <div id="loading-message" class="loading-message" style="text-align: center; margin: 20px 0;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i>
+            <p style="margin-top: 10px;">Checking license...</p>
+        </div>
+        
         <!-- Login Section -->
-        <div id="login-section" class="auth-section">
+        <div id="login-section" class="auth-section" style="display: none;">
             <h1>Log In to Your Account</h1>
-            <div class="license-status" id="license-status">
-                <div class="license-badge" id="license-badge">
-                    <i class="fas fa-key"></i> <span id="license-text">Checking license...</span>
-                </div>
-            </div>
             
-            <button id="google-login-btn" class="btn btn-google">
+            <button id="google-login" class="btn btn-google">
                 <i class="fab fa-google"></i> Continue with Google
             </button>
             
@@ -363,15 +364,56 @@
       
       // Check authentication state
       function checkAuthState() {
+        // Remove the 'checking license' message
+        const loadingMessage = document.getElementById('loading-message');
+        if (loadingMessage) {
+          loadingMessage.style.display = 'none';
+        }
+        
+        // Show the login form
+        const loginSection = document.getElementById('login-section');
+        if (loginSection) {
+          loginSection.style.display = 'block';
+        }
+        
+        // Function to show user info when logged in
+        function showUserInfo(user) {
+          const userSection = document.getElementById('user-section');
+          const userEmail = document.getElementById('user-email');
+          
+          if (userSection && userEmail) {
+            userEmail.textContent = user.email;
+            loginSection.style.display = 'none';
+            signupSection.style.display = 'none';
+            resetSection.style.display = 'none';
+            userSection.style.display = 'block';
+          } else {
+            // If user section doesn't exist, redirect to index
+            localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
+            localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
+            localStorage.setItem('hourflow_auth_checked', 'completed');
+            window.location.href = 'index.html';
+          }
+        }
+        
+        // Function to hide user info when logged out
+        function hideUserInfo() {
+          const userSection = document.getElementById('user-section');
+          if (userSection) {
+            userSection.style.display = 'none';
+            loginSection.style.display = 'block';
+          }
+        }
+        
         onAuthStateChanged(auth, (user) => {
           if (user) {
             // User is signed in
             console.log('User is signed in:', user.email);
-            showUserInfo(user);
             // Set a license for authenticated users
             localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
             localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
             localStorage.setItem('hourflow_auth_checked', 'completed');
+            showUserInfo(user);
           } else {
             // User is signed out
             console.log('User is signed out');
@@ -382,17 +424,32 @@
       
       // DOM content loaded event
       document.addEventListener('DOMContentLoaded', function() {
-        // Check license status
-        checkLicenseStatus();
+        console.log('DOM content loaded');
         
-        // Check if user is logged in
-        checkAuthState();
-        
-        // Clear the auth_checked flag if we're on the login page
-        // This ensures proper flow between license and login pages
-        if (localStorage.getItem('hourflow_auth_checked') === 'pending') {
-            localStorage.setItem('hourflow_auth_checked', 'completed');
-        }
+        // Hide loading message and show login form after a short delay
+        setTimeout(function() {
+          const loadingMessage = document.getElementById('loading-message');
+          if (loadingMessage) {
+            loadingMessage.style.display = 'none';
+          }
+          
+          const loginSection = document.getElementById('login-section');
+          if (loginSection) {
+            loginSection.style.display = 'block';
+          }
+          
+          // Check license status
+          checkLicenseStatus();
+          
+          // Check if user is logged in
+          checkAuthState();
+          
+          // Clear the auth_checked flag if we're on the login page
+          // This ensures proper flow between license and login pages
+          if (localStorage.getItem('hourflow_auth_checked') === 'pending') {
+              localStorage.setItem('hourflow_auth_checked', 'completed');
+          }
+        }, 1000); // Wait 1 second to ensure everything is loaded
       });
     </script>
     
