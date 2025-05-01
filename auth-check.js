@@ -6,7 +6,25 @@ function checkAuth() {
     // Skip auth check on login and license pages
     const currentPath = window.location.pathname;
     if (currentPath.includes('login.html') || currentPath.includes('license.html')) {
-        console.log('On login or license page, skipping auth check');
+        console.log('Op login of licentie pagina, auth check overgeslagen');
+        document.body.style.visibility = 'visible';
+        return;
+    }
+    
+    // Controleer eerst of er al een gebruiker in localStorage staat
+    // Dit kan gebeuren als de login.html pagina de gebruiker al heeft opgeslagen
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+        console.log('Gebruiker gevonden in localStorage');
+        // Controleer of er een licentie is
+        const licenseKey = localStorage.getItem('hourflow_license');
+        if (!licenseKey && !currentPath.includes('license.html')) {
+            console.log('Gebruiker ingelogd maar geen licentie gevonden, doorsturen naar licentiepagina');
+            window.location.href = 'license.html';
+            return;
+        }
+        
+        // Gebruiker is ingelogd en heeft een licentie
         document.body.style.visibility = 'visible';
         return;
     }
@@ -22,33 +40,33 @@ function checkAuth() {
     
     firebase.auth().onAuthStateChanged(user => {
         if (!user) {
-            console.log('User not authenticated, redirecting to login page');
-            // Clear any existing license check flags to prevent loops
+            console.log('Gebruiker niet geauthenticeerd, doorsturen naar login pagina');
+            // Wis alle sessie-flags om loops te voorkomen
             sessionStorage.removeItem('license_check_in_progress');
-            // Set a flag to indicate we're in auth flow
-            sessionStorage.setItem('auth_redirect_in_progress', 'true');
+            sessionStorage.removeItem('auth_redirect_in_progress');
+            // Doorsturen naar login pagina
             window.location.href = 'login.html';
         } else {
-            console.log('User authenticated:', user.email);
-            // Clear auth redirect flag
+            console.log('Gebruiker geauthenticeerd:', user.email);
+            // Wis redirect flags
             sessionStorage.removeItem('auth_redirect_in_progress');
-            // Store user info in localStorage for app use
+            // Sla gebruikersinfo op in localStorage
             storeUserInfo(user);
             
-            // Now check if user has a valid license
+            // Controleer of gebruiker een geldige licentie heeft
             const licenseKey = localStorage.getItem('hourflow_license');
             if (!licenseKey && !currentPath.includes('license.html')) {
-                console.log('User authenticated but no license found, redirecting to license page');
+                console.log('Gebruiker geauthenticeerd maar geen licentie gevonden, doorsturen naar licentiepagina');
                 window.location.href = 'license.html';
                 return;
             }
             
-            // Make the app visible now that we know user is authenticated and has a license
+            // Maak de app zichtbaar nu we weten dat de gebruiker is geauthenticeerd en een licentie heeft
             document.body.style.visibility = 'visible';
         }
     });
 
-    // Initially hide the body until auth check completes
+    // Verberg de body totdat de auth check voltooid is
     document.body.style.visibility = 'hidden';
 }
 
