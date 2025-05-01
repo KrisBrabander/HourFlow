@@ -1860,6 +1860,7 @@ ul {
     
     <!-- JavaScript -->
     <script src="license.js"></script>
+    <script src="invoice-revenue-connector.js"></script>
     
     <!-- SIMPELE GEBRUIKERSISOLATIE - GEGARANDEERD WERKEND -->
     <script>
@@ -2341,79 +2342,198 @@ ul {
                         
                         return false;
                     };
-                }
-                
-                if (clientFormElement) {
-                    clientFormElement.onsubmit = function(e) {
-                        e.preventDefault();
-                        console.log('Client formulier ingediend');
-                        
-                        // Verzamel formulier data
-                        var nameInput = document.getElementById('client-name');
-                        var contactInput = document.getElementById('client-contact');
-                        var emailInput = document.getElementById('client-email');
-                        var phoneInput = document.getElementById('client-phone');
-                        var addressInput = document.getElementById('client-address');
-                        var notesInput = document.getElementById('client-notes');
-                        
-                        if (!nameInput) {
-                            console.error('Client name input niet gevonden');
-                            return false;
-                        }
-                        
-                        // Valideer naam (verplicht)
-                        if (!nameInput.value.trim()) {
-                            showNotification('Please enter a client name', 'error');
-                            return false;
-                        }
-                        
-                        // Maak client object
-                        var client = {
-                            id: clientFormElement.getAttribute('data-editing-id') || generateId(),
-                            name: nameInput.value.trim(),
-                            contact: contactInput ? contactInput.value.trim() : '',
-                            email: emailInput ? emailInput.value.trim() : '',
-                            phone: phoneInput ? phoneInput.value.trim() : '',
-                            address: addressInput ? addressInput.value.trim() : '',
-                            notes: notesInput ? notesInput.value.trim() : '',
-                            timestamp: Date.now()
-                        };
-                        
-                        console.log('Client object created:', client);
-                        
-                        // Haal bestaande clients op via dataManager
-                        var clients = dataManager.getData('clients', []);
-                        console.log('Clients geladen voor bewerking:', clients.length);
-                        
-                        // Controleer of we bewerken of toevoegen
-                        var editingClientId = clientFormElement.getAttribute('data-editing-id');
-                        var message = '';
-                        
-                        if (editingClientId) {
-                            // Update bestaande client
-                            var clientUpdated = false;
-                            
-                            app.state.clients = clients;
-                            console.log('App state clients bijgewerkt:', app.state.clients);
-                        } else {
-                            console.error('App state niet gevonden!');
-                        }
-                        
-                        // Reset formulier
                         clientFormElement.reset();
-                        
-                        // Verberg formulier
-                        if (clientForm) clientForm.style.display = 'none';
-                        
-                        // Update UI
+                        clientFormElement.removeAttribute('data-editing-id');
+                    }
+
+                    // Update formulier titel
+                    var formTitle = document.querySelector('.card-title');
+                    if (formTitle) formTitle.textContent = 'Add Client';
+
+                    // Toon formulier
+                    if (clientForm) clientForm.style.display = 'block';
+
+                    return false;
+                };
+            }
+
+            if (closeBtn) {
+                closeBtn.onclick = function(e) {
+                    e.preventDefault();
+                    console.log('Close knop geklikt');
+
+                    // Verberg formulier
+                    if (clientForm) clientForm.style.display = 'none';
+
+                    return false;
+                };
+            }
+
+            if (clientFormElement) {
+                clientFormElement.onsubmit = function(e) {
+                    e.preventDefault();
+
+                    // Haal formuliergegevens op
+                    var clientName = document.getElementById('client-name').value;
+                    var clientContact = document.getElementById('client-contact').value;
+                    var clientEmail = document.getElementById('client-email').value;
+                    var clientPhone = document.getElementById('client-phone').value;
+                    var clientAddress = document.getElementById('client-address').value;
+
+                    // Controleer of we een client bewerken of een nieuwe toevoegen
+                    var editingId = this.getAttribute('data-editing-id');
+                    var message = '';
+
+                    // Haal bestaande clients op
+                    let clients = dataManager.getData('clients', []);
+
+                    if (editingId) {
+                        // Zoek de client die we bewerken
+                        var clientIndex = -1;
+                        for (var i = 0; i < clients.length; i++) {
+                            if (clients[i].id === editingId) {
+                                clientIndex = i;
+                                break;
+                            }
+                        }
+
+                        if (clientIndex !== -1) {
+                            // Update client
+                            clients[clientIndex].name = clientName;
+                            clients[clientIndex].contact = clientContact;
+                            clients[clientIndex].email = clientEmail;
+                            clients[clientIndex].phone = clientPhone;
+                            clients[clientIndex].address = clientAddress;
+
+                            message = 'Client updated successfully!';
+                        } else {
+                            console.error('Client not found for editing:', editingId);
+                            return false;
+                        }
+
+                        // Reset editing mode
+                        this.removeAttribute('data-editing-id');
+
+                        // Reset form title
+                        var formTitle = document.querySelector('.client-form .card-title');
+                        if (formTitle) formTitle.textContent = 'Add Client';
+                    } else {
+                        // Create new client
+                        var newClient = {
+                            id: generateId(),
+                            name: clientName,
+                            contact: clientContact,
+                            email: clientEmail,
+                            phone: clientPhone,
+                            address: clientAddress
+                        };
+
+                        // Add to clients array
+                        clients.push(newClient);
+                        message = 'Client added successfully!';
+                    }
+
+                    // Save to storage
+                    dataManager.saveData('clients', clients);
+
+                    // Update app state
+                    if (window.app && app.state) {
+                        app.state.clients = clients;
+                    }
+                    
+                    // Update UI immediately
+                    updateClientsTable();
+                    updateClientDropdowns();
+                    
+                    // Reset form
+                    this.reset();
+                    
+                    // Hide form
+                    if (clientForm) clientForm.style.display = 'none';
+                    }
+
+                    // Toon notificatie
+                    showNotification(message);
+
+                    return false;
+                };
+            }
+
+            // Initiële update
+            updateClientsTable();
+            updateClientDropdowns();
+
+            // Sync localStorage met app state
+            syncClientsWithAppState();
+
+            // Event listener voor clear all clients knop
+            var clearAllClientsBtn = document.getElementById('clear-all-clients');
+            if (clearAllClientsBtn) {
+                clearAllClientsBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to delete all clients? This cannot be undone.')) {
+                        // Verwijder clients via dataManager
+                        dataManager.removeData('clients');
+
+                        // Update app state
+                        if (window.app && app.state) {
+                            app.state.clients = [];
+                        }
                         updateClientsTable();
                         updateClientDropdowns();
-                        
-                        // Toon notificatie
-                        showNotification(message);
-                        
-                        return false;
-                    };
+                        showNotification('All clients have been deleted');
+                    }
+                });
+            }
+
+            // Functie om clients tabel bij te werken
+            function updateClientsTable() {
+                if (!clientsTable) return;
+
+                try {
+                    // Haal clients op via dataManager
+                    let clients = dataManager.getData('clients', []);
+                    console.log('Clients geladen voor tabel:', clients.length);
+
+                    // Maak tabel leeg
+                    clientsTable.innerHTML = '';
+
+                    // Voeg header toe
+                    const headerRow = document.createElement('tr');
+                    headerRow.innerHTML = `
+                        <th>Name</th>
+                        <th>Contact</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Actions</th>
+                    `;
+                    clientsTable.appendChild(headerRow);
+
+                    // Als er geen clients zijn
+                    if (clients.length === 0) {
+                        var emptyRow = document.createElement('tr');
+                        emptyRow.innerHTML = '<td colspan="5" class="text-center">No clients added yet</td>';
+                        clientsTable.appendChild(emptyRow);
+                        return;
+                    }
+
+                    // Voeg elke client toe aan de tabel
+                    clients.forEach(function(client) {
+                        if (!client || !client.id || !client.name) return; // Skip ongeldige clients
+
+                        var row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${client.name || '-'}</td>
+                            <td>${client.contact || '-'}</td>
+                            <td>${client.email || '-'}</td>
+                            <td>${client.phone || '-'}</td>
+                            <td>
+                                <button class="btn-icon edit-client" data-id="${client.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon delete-client" data-id="${client.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
                 }
                 
                 // Initiële update
@@ -2445,31 +2565,6 @@ ul {
                 // Functie om clients tabel bij te werken
                 function updateClientsTable() {
                     if (!clientsTable) return;
-                    
-                    try {
-                        // Haal clients op via dataManager
-                        let clients = dataManager.getData('clients', []);
-                        console.log('Clients geladen voor tabel:', clients.length);
-                        
-                        // Maak tabel leeg
-                        clientsTable.innerHTML = '';
-                        
-                        // Voeg header toe
-                        const headerRow = document.createElement('tr');
-                        headerRow.innerHTML = `
-                            <th>Name</th>
-                            <th>Contact</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Actions</th>
-                        `;
-                        clientsTable.appendChild(headerRow);
-                        
-                        // Als er geen clients zijn
-                        if (clients.length === 0) {
-                            var emptyRow = document.createElement('tr');
-                            emptyRow.innerHTML = '<td colspan="5" class="text-center">No clients added yet</td>';
-                            clientsTable.appendChild(emptyRow);
                             return;
                         }
                         
