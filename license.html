@@ -354,11 +354,24 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      showSuccess('License verified! Redirecting to login...');
-
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 1000);
+      // Controleer of de gebruiker al is ingelogd
+      const currentUser = localStorage.getItem('currentUser');
+      
+      if (currentUser) {
+        // Gebruiker is al ingelogd, direct naar de app
+        showSuccess('License verified! Redirecting to application...');
+        
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1000);
+      } else {
+        // Gebruiker is nog niet ingelogd, naar de login pagina
+        showSuccess('License verified! Redirecting to login...');
+        
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 1000);
+      }
     } catch (error) {
       console.error('Error saving license:', error);
       showError('Unable to save license information. Please disable incognito mode or enable cookies.');
