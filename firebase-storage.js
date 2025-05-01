@@ -262,37 +262,70 @@ const firebaseStorage = {
         
         // Gebruikersprefix voor localStorage
         const userPrefix = `user_${this.userId}_`;
+        let syncedItems = 0;
         
+        // VERBETERD SYNCHRONISATIE ALGORITME
         for (const key of keys) {
             try {
                 // Haal gegevens op uit Firebase
                 const firebaseValue = await this.getItem(key);
+                // Haal gegevens op uit localStorage
+                let localValue = null;
+                try {
+                    localValue = localStorage.getItem(userPrefix + key);
+                } catch (e) {
+                    console.warn(`[FirebaseStorage] Could not read localStorage for ${key}:`, e);
+                }
                 
-                if (firebaseValue !== null) {
-                    // Firebase heeft gegevens, update localStorage
+                // STRATEGIE 1: Firebase heeft data, localStorage niet of is leeg
+                if (firebaseValue !== null && (localValue === null || localValue === '[]' || localValue === '{}')) {
                     try {
                         if (typeof firebaseValue === 'object') {
                             localStorage.setItem(userPrefix + key, JSON.stringify(firebaseValue));
                         } else {
                             localStorage.setItem(userPrefix + key, firebaseValue);
                         }
-                        this.log(`Updated localStorage from Firebase for ${key}`);
+                        this.log(`SYNC: Firebase → Local for ${key} (Firebase had data, local empty)`);
+                        syncedItems++;
                     } catch (e) {
                         console.error(`[FirebaseStorage] Error updating localStorage from Firebase for ${key}:`, e);
                     }
-                } else {
-                    // Firebase heeft geen gegevens, haal op uit localStorage en update Firebase
-                    const localValue = localStorage.getItem(userPrefix + key);
-                    if (localValue !== null) {
+                }
+                // STRATEGIE 2: localStorage heeft data, Firebase niet
+                else if (localValue !== null && localValue !== '[]' && localValue !== '{}' && firebaseValue === null) {
+                    try {
+                        // Parse JSON als het JSON is
                         try {
-                            // Parse JSON als het JSON is
                             const parsedValue = JSON.parse(localValue);
                             await this.setJSON(key, parsedValue);
                         } catch (e) {
                             // Als het geen JSON is, sla het op als string
                             await this.setItem(key, localValue);
                         }
-                        this.log(`Updated Firebase from localStorage for ${key}`);
+                        this.log(`SYNC: Local → Firebase for ${key} (Local had data, Firebase empty)`);
+                        syncedItems++;
+                    } catch (e) {
+                        console.error(`[FirebaseStorage] Error updating Firebase from localStorage for ${key}:`, e);
+                    }
+                }
+                // STRATEGIE 3: Beide hebben data, vergelijk timestamps of gebruik nieuwste
+                else if (localValue !== null && firebaseValue !== null) {
+                    try {
+                        // Probeer timestamps te vergelijken als die beschikbaar zijn
+                        let useFirebase = true; // Standaard Firebase gebruiken als nieuwer
+                        
+                        // Voor nu gebruiken we Firebase als bron van waarheid
+                        if (useFirebase) {
+                            if (typeof firebaseValue === 'object') {
+                                localStorage.setItem(userPrefix + key, JSON.stringify(firebaseValue));
+                            } else {
+                                localStorage.setItem(userPrefix + key, firebaseValue);
+                            }
+                            this.log(`SYNC: Firebase → Local for ${key} (Both had data, using Firebase)`);
+                            syncedItems++;
+                        }
+                    } catch (e) {
+                        console.error(`[FirebaseStorage] Error resolving conflict for ${key}:`, e);
                     }
                 }
             } catch (e) {
@@ -300,8 +333,8 @@ const firebaseStorage = {
             }
         }
         
-        console.log(`[FirebaseStorage] Sync completed between localStorage and Firebase`);
-        return true;
+        console.log(`[FirebaseStorage] Sync completed: ${syncedItems} items synchronized`);
+        return syncedItems > 0;
     }
 };
 
