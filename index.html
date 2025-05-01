@@ -212,75 +212,8 @@
             
             console.log('DEFINITIEVE GEBRUIKERSISOLATIE: Succesvol geactiveerd!');
             
-            // CROSS-DEVICE SYNCHRONISATIE
-            // Synchroniseer gegevens tussen apparaten via een directe JSON database
-            setTimeout(async function() {
-                console.log('CROSS-DEVICE SYNC: Starten...');
-                
-                if (typeof directDB !== 'undefined') {
-                    try {
-                        // Controleer of gebruiker is ingelogd
-                        if (!directDB.init()) {
-                            console.warn('CROSS-DEVICE SYNC: Gebruiker niet ingelogd, synchronisatie niet mogelijk');
-                            return;
-                        }
-                        
-                        // Lijst van keys die gesynchroniseerd moeten worden
-                        const keysToSync = [
-                            'clients',
-                            'projects',
-                            'timeEntries',
-                            'quotes',
-                            'invoices',
-                            'revenue',
-                            'settings'
-                        ];
-                        
-                        // Synchroniseer gegevens
-                        console.log('CROSS-DEVICE SYNC: Synchroniseren van gegevens...');
-                        const syncResult = await directDB.sync(keysToSync);
-                        
-                        if (syncResult) {
-                            console.log('CROSS-DEVICE SYNC: Synchronisatie voltooid!');
-                            
-                            // Toon een notificatie
-                            const notification = document.createElement('div');
-                            notification.className = 'notification success';
-                            notification.innerHTML = `
-                                <i class="fas fa-check-circle"></i>
-                                <span>Je gegevens zijn gesynchroniseerd en beschikbaar op al je apparaten!</span>
-                                <button class="close-btn"><i class="fas fa-times"></i></button>
-                            `;
-                            document.body.appendChild(notification);
-                            
-                            // Verberg de notificatie na 5 seconden
-                            setTimeout(() => {
-                                notification.style.opacity = '0';
-                                setTimeout(() => {
-                                    notification.remove();
-                                }, 500);
-                            }, 5000);
-                            
-                            // Voeg click event toe aan de close button
-                            const closeBtn = notification.querySelector('.close-btn');
-                            if (closeBtn) {
-                                closeBtn.addEventListener('click', () => {
-                                    notification.style.opacity = '0';
-                                    setTimeout(() => {
-                                        notification.remove();
-                                    }, 500);
-                                });
-                            }
-                        } else {
-                            console.log('CROSS-DEVICE SYNC: Geen gegevens gesynchroniseerd');
-                        }
-                    } catch (e) {
-                        console.error('CROSS-DEVICE SYNC: Fout bij synchroniseren:', e);
-                    }
-                } else {
-                    console.warn('CROSS-DEVICE SYNC: DirectDB is niet beschikbaar');
-                }
-            }, 2000); // Wacht 2 seconden
+            // Synchronisatie uitgeschakeld om app weer werkend te krijgen
+            console.log('Gebruikersspecifieke opslag is geactiveerd, cross-device sync uitgeschakeld');
         })();
     </script>
     
@@ -2044,7 +1977,6 @@ ul {
     <!-- JavaScript -->
     <script src="license.js"></script>
     <script src="user-storage.js"></script>
-    <script src="direct-database.js"></script>
     
     <!-- DIRECTE OPLOSSING: Gebruikersspecifieke gegevensopslag -->
     <script>
