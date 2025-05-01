@@ -1980,116 +1980,28 @@ ul {
     
     <!-- DIRECTE OPLOSSING: Gebruikersspecifieke gegevensopslag -->
     <script>
-        // Voer deze code direct uit bij het laden van de pagina
+        // Eenvoudige migratie van oude data indien nodig
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DIRECTE OPLOSSING: Implementeren van gebruikersspecifieke gegevensopslag...');
+            console.log('Controleren op oude data die gemigreerd moet worden...');
             
-            // Haal de huidige gebruiker op
-            let currentUser = null;
-            try {
-                const userJson = localStorage.getItem('currentUser');
-                if (userJson) {
-                    currentUser = JSON.parse(userJson);
-                    console.log('Huidige gebruiker gevonden:', currentUser.email);
-                } else {
-                    console.warn('Geen gebruiker ingelogd!');
-                }
-            } catch (e) {
-                console.error('Fout bij ophalen van gebruiker:', e);
+            if (typeof userStorage !== 'undefined' && userStorage.init()) {
+                // Lijst van keys die gesynchroniseerd moeten worden
+                const keysToMigrate = [
+                    'clients',
+                    'projects', 
+                    'timeEntries',
+                    'quotes',
+                    'invoices',
+                    'revenue',
+                    'settings'
+                ];
+                
+                // Migreer data als dat nodig is
+                userStorage.migrateData(keysToMigrate);
+                console.log('Gebruikersspecifieke opslag is actief');
+            } else {
+                console.warn('userStorage niet beschikbaar of gebruiker niet ingelogd');
             }
-            
-            // Alleen doorgaan als er een gebruiker is ingelogd
-            if (!currentUser || !currentUser.uid) {
-                console.warn('Geen gebruiker-ID gevonden, kan geen gebruikersspecifieke opslag implementeren');
-                return;
-            }
-            
-            // Maak een gebruikersspecifieke prefix voor localStorage keys
-            const userPrefix = `user_${currentUser.uid}_`;
-            console.log('Gebruikersspecifieke prefix:', userPrefix);
-            
-            // Overschrijf de standaard localStorage methodes om gebruikersspecifieke opslag te forceren
-            const originalSetItem = localStorage.setItem;
-            const originalGetItem = localStorage.getItem;
-            const originalRemoveItem = localStorage.removeItem;
-            
-            // Lijst van keys die gebruikersspecifiek moeten worden opgeslagen
-            const userSpecificKeys = [
-                'clients',
-                'projects',
-                'timeEntries',
-                'quotes',
-                'invoices',
-                'revenue',
-                'settings'
-            ];
-            
-            // Overschrijf localStorage.setItem
-            localStorage.setItem = function(key, value) {
-                // Als het een gebruikersspecifieke key is, voeg de prefix toe
-                if (userSpecificKeys.includes(key)) {
-                    const userKey = userPrefix + key;
-                    console.log(`Opslaan van gebruikersspecifieke data: ${key} -> ${userKey}`);
-                    originalSetItem.call(localStorage, userKey, value);
-                } else {
-                    // Anders, gebruik de originele methode
-                    originalSetItem.call(localStorage, key, value);
-                }
-            };
-            
-            // Overschrijf localStorage.getItem
-            localStorage.getItem = function(key) {
-                // Als het een gebruikersspecifieke key is, haal de geprefixte versie op
-                if (userSpecificKeys.includes(key)) {
-                    const userKey = userPrefix + key;
-                    const value = originalGetItem.call(localStorage, userKey);
-                    console.log(`Ophalen van gebruikersspecifieke data: ${key} -> ${userKey}`);
-                    return value;
-                } else {
-                    // Anders, gebruik de originele methode
-                    return originalGetItem.call(localStorage, key);
-                }
-            };
-            
-            // Overschrijf localStorage.removeItem
-            localStorage.removeItem = function(key) {
-                // Als het een gebruikersspecifieke key is, verwijder de geprefixte versie
-                if (userSpecificKeys.includes(key)) {
-                    const userKey = userPrefix + key;
-                    console.log(`Verwijderen van gebruikersspecifieke data: ${key} -> ${userKey}`);
-                    originalRemoveItem.call(localStorage, userKey);
-                } else {
-                    // Anders, gebruik de originele methode
-                    originalRemoveItem.call(localStorage, key);
-                }
-            };
-            
-            // Migreer bestaande gegevens naar gebruikersspecifieke opslag
-            console.log('Migreren van bestaande gegevens naar gebruikersspecifieke opslag...');
-            userSpecificKeys.forEach(function(key) {
-                try {
-                    // Controleer of er al gebruikersspecifieke gegevens zijn
-                    const userKey = userPrefix + key;
-                    const userValue = originalGetItem.call(localStorage, userKey);
-                    
-                    if (userValue === null) {
-                        // Haal de algemene gegevens op
-                        const globalValue = originalGetItem.call(localStorage, key);
-                        
-                        if (globalValue !== null) {
-                            // Sla de gegevens op onder de gebruikersspecifieke sleutel
-                            originalSetItem.call(localStorage, userKey, globalValue);
-                            console.log(`Gegevens gemigreerd: ${key} -> ${userKey}`);
-                        }
-                    } else {
-                        console.log(`Gebruikersspecifieke gegevens bestaan al voor: ${key}`);
-                    }
-                } catch (e) {
-                    console.error(`Fout bij migreren van ${key}:`, e);
-                }
-            });
-            
-            console.log('DIRECTE OPLOSSING: Gebruikersspecifieke gegevensopslag succesvol geïmplementeerd!');
         });
     </script>
     <!-- Firebase SDK -->
