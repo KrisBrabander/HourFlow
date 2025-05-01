@@ -524,11 +524,25 @@
             loginButton.disabled = true;
             
             signInWithEmailAndPassword(auth, email, password)
-                .then(() => {
+                .then((userCredential) => {
+                    // Store user info in localStorage
+                    const user = userCredential.user;
+                    const userInfo = {
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName || user.email.split('@')[0],
+                        photoURL: user.photoURL || null,
+                        lastLogin: new Date().toISOString()
+                    };
+                    localStorage.setItem('currentUser', JSON.stringify(userInfo));
+                    
                     // Set a default license for authenticated users
                     localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
                     localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
-                    localStorage.setItem('hourflow_auth_checked', 'completed');
+                    
+                    // Clear any redirect flags to prevent loops
+                    sessionStorage.removeItem('auth_redirect_in_progress');
+                    sessionStorage.removeItem('license_check_in_progress');
                     
                     // Show success message
                     const loginSuccess = document.getElementById('login-success') || document.createElement('div');
@@ -612,11 +626,25 @@
             
             const provider = new GoogleAuthProvider();
             signInWithPopup(auth, provider)
-                .then(() => {
+                .then((result) => {
+                    // Store user info in localStorage
+                    const user = result.user;
+                    const userInfo = {
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName || user.email.split('@')[0],
+                        photoURL: user.photoURL || null,
+                        lastLogin: new Date().toISOString()
+                    };
+                    localStorage.setItem('currentUser', JSON.stringify(userInfo));
+                    
                     // Always set a license for authenticated users
                     localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
                     localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
-                    localStorage.setItem('hourflow_auth_checked', 'completed');
+                    
+                    // Clear any redirect flags to prevent loops
+                    sessionStorage.removeItem('auth_redirect_in_progress');
+                    sessionStorage.removeItem('license_check_in_progress');
                     
                     // Show success message
                     const loginSuccess = document.getElementById('login-success') || document.createElement('div');
