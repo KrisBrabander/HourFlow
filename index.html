@@ -1,12 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-      <script defer src="https://cloud.umami.is/script.js" data-website-id="302cd0f7-976d-421f-8e7e-5fc3b9d60e60"></script>
-
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HourFlow Premium - Complete Freelancer Suite</title>
+    
+    <!-- DIRECTE GEBRUIKERSISOLATIE - Voeg dit toe aan het begin van de pagina -->
+    <script>
+        // Onmiddellijk uitvoeren vóór andere scripts
+        (function() {
+            console.log('DIRECTE GEBRUIKERSISOLATIE: Activeren...');
+            
+            // Controleer of er een gebruiker is ingelogd
+            let currentUser = null;
+            try {
+                const userJson = localStorage.getItem('currentUser');
+                if (userJson) {
+                    currentUser = JSON.parse(userJson);
+                    console.log('Gebruiker gevonden:', currentUser.email);
+                    
+                    // Controleer of er een licentie is
+                    if (!localStorage.getItem('hourflow_license')) {
+                        console.log('Geen licentie gevonden, automatisch instellen...');
+                        localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
+                        localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
+                    }
+                } else {
+                    console.warn('WAARSCHUWING: Geen gebruiker ingelogd!');
+                    window.location.href = 'login.html';
+                    return;
+                }
+            } catch (e) {
+                console.error('Fout bij ophalen gebruiker:', e);
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Als er geen gebruiker is, redirect naar login
+            if (!currentUser || !currentUser.uid) {
+                console.warn('WAARSCHUWING: Geen geldige gebruiker gevonden, redirecting...');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // BELANGRIJKE STAP: Overschrijf localStorage methodes VOORDAT andere scripts laden
+            const userPrefix = 'user_' + currentUser.uid + '_';
+            console.log('Gebruikersprefix:', userPrefix);
+            
+            // Bewaar originele localStorage methodes
+            const originalSetItem = localStorage.setItem;
+            const originalGetItem = localStorage.getItem;
+            const originalRemoveItem = localStorage.removeItem;
+            
+            // Lijst van keys die gebruikersspecifiek moeten zijn
+            const userSpecificKeys = [
+                'clients',
+                'projects',
+                'timeEntries',
+                'quotes',
+                'invoices',
+                'revenue',
+                'settings'
+            ];
+            
+            // Overschrijf setItem
+            localStorage.setItem = function(key, value) {
+                if (userSpecificKeys.includes(key)) {
+                    console.log(`ISOLATIE: Opslaan ${key} → ${userPrefix}${key}`);
+                    return originalSetItem.call(localStorage, userPrefix + key, value);
+                }
+                return originalSetItem.call(localStorage, key, value);
+            };
+            
+            // Overschrijf getItem
+            localStorage.getItem = function(key) {
+                if (userSpecificKeys.includes(key)) {
+                    console.log(`ISOLATIE: Ophalen ${key} → ${userPrefix}${key}`);
+                    return originalGetItem.call(localStorage, userPrefix + key);
+                }
+                return originalGetItem.call(localStorage, key);
+            };
+            
+            // Overschrijf removeItem
+            localStorage.removeItem = function(key) {
+                if (userSpecificKeys.includes(key)) {
+                    console.log(`ISOLATIE: Verwijderen ${key} → ${userPrefix}${key}`);
+                    return originalRemoveItem.call(localStorage, userPrefix + key);
+                }
+                return originalRemoveItem.call(localStorage, key);
+            };
+            
+            // Migreer bestaande gegevens
+            console.log('ISOLATIE: Migreren van bestaande gegevens...');
+            userSpecificKeys.forEach(function(key) {
+                try {
+                    // Controleer of er al gebruikersspecifieke gegevens zijn
+                    if (originalGetItem.call(localStorage, userPrefix + key) === null) {
+                        // Haal algemene gegevens op
+                        const value = originalGetItem.call(localStorage, key);
+                        if (value !== null) {
+                            // Sla op met gebruikersprefix
+                            originalSetItem.call(localStorage, userPrefix + key, value);
+                            console.log(`ISOLATIE: Gemigreerd ${key} → ${userPrefix}${key}`);
+                        }
+                    }
+                } catch (e) {
+                    console.error(`Fout bij migreren van ${key}:`, e);
+                }
+            });
+            
+            console.log('DIRECTE GEBRUIKERSISOLATIE: Succesvol geactiveerd!');
+        })();
+    </script>
     
     <!-- License verification script -->
     <script>
