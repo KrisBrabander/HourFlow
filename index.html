@@ -725,84 +725,44 @@ ul {
     </style>
 </head>
 <body>
-    <!-- LocalStorage Interceptor Script - Zorgt ervoor dat alle localStorage aanroepen worden omgeleid naar userStorage -->
+    <!-- User Storage Migration Script - Migreert gegevens naar gebruikersspecifieke opslag -->
     <script>
-        // Wacht tot de pagina volledig geladen is
+        // Voer deze code uit nadat de pagina volledig geladen is
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('LocalStorage Interceptor initializing...');
+            console.log('User Storage Migration initializing...');
             
             // Controleer of userStorage beschikbaar is
             if (typeof userStorage === 'undefined') {
-                console.error('userStorage is not defined, cannot intercept localStorage calls');
+                console.error('userStorage is not defined, cannot migrate data');
                 return;
             }
             
-            // Bewaar de originele localStorage methoden
-            const originalSetItem = localStorage.setItem;
-            const originalGetItem = localStorage.getItem;
-            const originalRemoveItem = localStorage.removeItem;
-            
-            // Vervang localStorage.setItem
-            localStorage.setItem = function(key, value) {
-                console.log(`[LocalStorage Interceptor] Intercepted setItem for key: ${key}`);
-                
-                // Sla altijd op in de originele localStorage voor backward compatibility
-                originalSetItem.call(localStorage, key, value);
-                
-                // Sla ook op in userStorage als het geen systeem/authenticatie key is
-                if (!key.startsWith('firebase:') && 
-                    key !== 'currentUser' && 
-                    key !== 'hourflow_license' && 
-                    key !== 'hourflow_verified_license' && 
-                    key !== 'hourflow_auth_checked' && 
-                    key !== 'manual_login_completed') {
-                    userStorage.setItem(key, value);
-                    console.log(`[LocalStorage Interceptor] Saved to userStorage: ${key}`);
-                }
-            };
-            
-            // Vervang localStorage.getItem
-            localStorage.getItem = function(key) {
-                console.log(`[LocalStorage Interceptor] Intercepted getItem for key: ${key}`);
-                
-                // Haal altijd op uit userStorage als het geen systeem/authenticatie key is
-                if (!key.startsWith('firebase:') && 
-                    key !== 'currentUser' && 
-                    key !== 'hourflow_license' && 
-                    key !== 'hourflow_verified_license' && 
-                    key !== 'hourflow_auth_checked' && 
-                    key !== 'manual_login_completed') {
-                    const userValue = userStorage.getItem(key);
-                    if (userValue !== null) {
-                        console.log(`[LocalStorage Interceptor] Retrieved from userStorage: ${key}`);
-                        return userValue;
-                    }
+            // Controleer of er een gebruiker is ingelogd
+            setTimeout(function() {
+                const userId = userStorage.getCurrentUserId();
+                if (!userId) {
+                    console.warn('No user ID found, cannot migrate data');
+                    return;
                 }
                 
-                // Fallback naar originele localStorage
-                return originalGetItem.call(localStorage, key);
-            };
-            
-            // Vervang localStorage.removeItem
-            localStorage.removeItem = function(key) {
-                console.log(`[LocalStorage Interceptor] Intercepted removeItem for key: ${key}`);
+                console.log('Starting data migration for user:', userId);
                 
-                // Verwijder altijd uit de originele localStorage
-                originalRemoveItem.call(localStorage, key);
+                // Lijst van keys die gemigreerd moeten worden
+                const keysToMigrate = [
+                    'clients',
+                    'projects',
+                    'timeEntries',
+                    'quotes',
+                    'invoices',
+                    'revenue',
+                    'settings'
+                ];
                 
-                // Verwijder ook uit userStorage als het geen systeem/authenticatie key is
-                if (!key.startsWith('firebase:') && 
-                    key !== 'currentUser' && 
-                    key !== 'hourflow_license' && 
-                    key !== 'hourflow_verified_license' && 
-                    key !== 'hourflow_auth_checked' && 
-                    key !== 'manual_login_completed') {
-                    userStorage.removeItem(key);
-                    console.log(`[LocalStorage Interceptor] Removed from userStorage: ${key}`);
-                }
-            };
-            
-            console.log('LocalStorage Interceptor initialized successfully');
+                // Migreer alle gegevens
+                userStorage.migrateData(keysToMigrate);
+                
+                console.log('Data migration completed for user:', userId);
+            }, 1000); // Wacht 1 seconde om ervoor te zorgen dat alles geladen is
         });
     </script>
     
