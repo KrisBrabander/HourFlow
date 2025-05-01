@@ -213,14 +213,17 @@
             console.log('DEFINITIEVE GEBRUIKERSISOLATIE: Succesvol geactiveerd!');
             
             // CROSS-DEVICE SYNCHRONISATIE
-            // Synchroniseer gegevens tussen apparaten via Firebase
+            // Synchroniseer gegevens tussen apparaten via een directe JSON database
             setTimeout(async function() {
                 console.log('CROSS-DEVICE SYNC: Starten...');
                 
-                if (typeof firebaseStorage !== 'undefined') {
+                if (typeof directDB !== 'undefined') {
                     try {
-                        // Initialiseer Firebase Storage
-                        await firebaseStorage.init();
+                        // Controleer of gebruiker is ingelogd
+                        if (!directDB.init()) {
+                            console.warn('CROSS-DEVICE SYNC: Gebruiker niet ingelogd, synchronisatie niet mogelijk');
+                            return;
+                        }
                         
                         // Lijst van keys die gesynchroniseerd moeten worden
                         const keysToSync = [
@@ -234,7 +237,8 @@
                         ];
                         
                         // Synchroniseer gegevens
-                        const syncResult = await firebaseStorage.sync(keysToSync);
+                        console.log('CROSS-DEVICE SYNC: Synchroniseren van gegevens...');
+                        const syncResult = await directDB.sync(keysToSync);
                         
                         if (syncResult) {
                             console.log('CROSS-DEVICE SYNC: Synchronisatie voltooid!');
@@ -274,7 +278,7 @@
                         console.error('CROSS-DEVICE SYNC: Fout bij synchroniseren:', e);
                     }
                 } else {
-                    console.warn('CROSS-DEVICE SYNC: Firebase Storage is niet beschikbaar');
+                    console.warn('CROSS-DEVICE SYNC: DirectDB is niet beschikbaar');
                 }
             }, 2000); // Wacht 2 seconden
         })();
@@ -2040,7 +2044,7 @@ ul {
     <!-- JavaScript -->
     <script src="license.js"></script>
     <script src="user-storage.js"></script>
-    <script src="firebase-storage.js"></script>
+    <script src="direct-database.js"></script>
     
     <!-- DIRECTE OPLOSSING: Gebruikersspecifieke gegevensopslag -->
     <script>
