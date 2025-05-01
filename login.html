@@ -53,11 +53,6 @@
             margin-bottom: 30px;
         }
         
-        .logo img {
-            max-width: 150px;
-            height: auto;
-        }
-        
         h1 {
             text-align: center;
             color: var(--dark);
@@ -161,36 +156,6 @@
             text-decoration: underline;
         }
         
-        .license-status {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .license-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            background-color: var(--light);
-            color: var(--medium);
-            transition: all 0.3s ease;
-        }
-        
-        .license-badge.valid {
-            background-color: rgba(76, 175, 80, 0.1);
-            color: var(--success);
-        }
-        
-        .license-badge.invalid {
-            background-color: rgba(244, 67, 54, 0.1);
-            color: var(--danger);
-        }
-        
-        .license-badge i {
-            margin-right: 5px;
-        }
-        
         .error-message {
             color: var(--danger);
             font-size: 14px;
@@ -218,6 +183,20 @@
         #signup-section {
             display: none;
         }
+        
+        #debug-log {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 80%;
+            max-height: 200px;
+            overflow: auto;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body>
@@ -226,27 +205,13 @@
             <h1>HourFlow</h1>
         </div>
         
-        <!-- Loading Message -->
-        <div id="loading-message" class="loading-message" style="text-align: center; margin: 20px 0;">
-            <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i>
-            <p style="margin-top: 10px;">Checking license...</p>
-        </div>
-        
         <!-- Login Section -->
-        <div id="login-section" class="auth-section" style="display: none;">
+        <div id="login-section" class="auth-section">
             <h1>Log In to Your Account</h1>
-            
-            <button id="google-login" class="btn btn-google">
-                <i class="fab fa-google"></i> Continue with Google
-            </button>
-            
-            <div class="divider">
-                <span>OR</span>
-            </div>
             
             <form id="login-form">
                 <div class="form-group">
-                    <label for="login-email" class="form-label">Email</label>
+                    <label for="login-email" class="form-label">Email Address</label>
                     <input type="email" id="login-email" class="form-control" placeholder="Enter your email" required>
                 </div>
                 
@@ -260,28 +225,36 @@
                 </div>
                 
                 <button type="submit" class="btn">Log In</button>
-                
                 <div id="login-error" class="error-message"></div>
+                
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+                
+                <button type="button" id="google-login-btn" class="btn btn-google">
+                    <i class="fab fa-google"></i> Continue with Google
+                </button>
+                
+                <div class="text-center mt-3">
+                    <span class="text-muted">Don't have an account?</span>
+                    <a href="#" id="signup-link" class="link">Sign Up</a>
+                </div>
             </form>
-            
-            <div class="text-center mt-3">
-                <p class="text-muted">Don't have an account? <a href="#" id="signup-link" class="link">Sign Up</a></p>
-            </div>
         </div>
         
         <!-- Sign Up Section -->
         <div id="signup-section" class="auth-section">
-            <h1>Create an Account</h1>
+            <h1>Create a New Account</h1>
             
             <form id="signup-form">
                 <div class="form-group">
-                    <label for="signup-email" class="form-label">Email</label>
+                    <label for="signup-email" class="form-label">Email Address</label>
                     <input type="email" id="signup-email" class="form-control" placeholder="Enter your email" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="signup-password" class="form-label">Password</label>
-                    <input type="password" id="signup-password" class="form-control" placeholder="Enter your password" required>
+                    <input type="password" id="signup-password" class="form-control" placeholder="Create a password" required>
                 </div>
                 
                 <div class="form-group">
@@ -290,14 +263,13 @@
                 </div>
                 
                 <button type="submit" class="btn">Sign Up</button>
-                
                 <div id="signup-error" class="error-message"></div>
-                <div id="signup-success" class="success-message"></div>
+                
+                <div class="text-center mt-3">
+                    <span class="text-muted">Already have an account?</span>
+                    <a href="#" id="login-link" class="link">Log In</a>
+                </div>
             </form>
-            
-            <div class="text-center mt-3">
-                <p class="text-muted">Already have an account? <a href="#" id="login-link" class="link">Log In</a></p>
-            </div>
         </div>
         
         <!-- Reset Password Section -->
@@ -306,411 +278,272 @@
             
             <form id="reset-password-form">
                 <div class="form-group">
-                    <label for="reset-email" class="form-label">Email</label>
+                    <label for="reset-email" class="form-label">Email Address</label>
                     <input type="email" id="reset-email" class="form-control" placeholder="Enter your email" required>
                 </div>
                 
                 <button type="submit" class="btn">Send Reset Link</button>
-                
                 <div id="reset-error" class="error-message"></div>
-                <div id="reset-success" class="success-message"></div>
+                
+                <div class="text-center mt-3">
+                    <a href="#" id="back-to-login-link" class="link">Back to Login</a>
+                </div>
             </form>
-            
-            <div class="text-center mt-3">
-                <p class="text-muted"><a href="#" id="back-to-login" class="link">Back to Login</a></p>
-            </div>
         </div>
     </div>
     
-    <!-- Firebase SDK -->
+    <div id="debug-log"></div>
+    
     <script type="module">
-      // Import the functions you need from the SDKs you need
+      // Import Firebase modules
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-      import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
-      import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
       
-      // Your web app's Firebase configuration
+      // Firebase configuration
       const firebaseConfig = {
         apiKey: "AIzaSyBrMzcoCMN9tXROYdJCMq9iT9NX5IW_fqE",
         authDomain: "hourflow-54a34.firebaseapp.com",
         projectId: "hourflow-54a34",
-        storageBucket: "hourflow-54a34.firebasestorage.app",
-        messagingSenderId: "582955946179",
-        appId: "1:582955946179:web:e97d00b0036ff362379276",
-        measurementId: "G-ZNGXWM3FMF"
+        storageBucket: "hourflow-54a34.appspot.com",
+        messagingSenderId: "1068006762571",
+        appId: "1:1068006762571:web:c5bfb2e1a4e9d0e9b0a8e8",
+        measurementId: "G-VKXCL7NWTH"
       };
-
+      
       // Initialize Firebase
       const app = initializeApp(firebaseConfig);
-      const analytics = getAnalytics(app);
       const auth = getAuth(app);
-            // Make Firebase auth available globally
-      window.firebaseAuth = {
-        auth: auth,
-        createUser: createUserWithEmailAndPassword,
-        signIn: signInWithEmailAndPassword,
-        signOut: signOut,
-        onAuthStateChanged: onAuthStateChanged,
-        GoogleProvider: GoogleAuthProvider,
-        signInWithPopup: signInWithPopup,
-        sendPasswordResetEmail: sendPasswordResetEmail
-      };
       
-      // Initialize Firebase functions
-      function initializeFirebase() {
-        // Already initialized above
-        console.log('Firebase already initialized');
+      // Debug function
+      function debugLog(message) {
+        console.log('[DEBUG] ' + message);
+        const debugElement = document.getElementById('debug-log');
+        const logItem = document.createElement('div');
+        logItem.textContent = message;
+        debugElement.appendChild(logItem);
+        debugElement.scrollTop = debugElement.scrollHeight;
       }
       
-      // Check authentication state
-      function checkAuthState() {
-        // Remove the 'checking license' message
-        const loadingMessage = document.getElementById('loading-message');
-        if (loadingMessage) {
-          loadingMessage.style.display = 'none';
-        }
-        
-        // Show the login form
-        const loginSection = document.getElementById('login-section');
-        if (loginSection) {
-          loginSection.style.display = 'block';
-        }
-        
-        // Function to show user info when logged in
-        function showUserInfo(user) {
-          const userSection = document.getElementById('user-section');
-          const userEmail = document.getElementById('user-email');
-          
-          if (userSection && userEmail) {
-            userEmail.textContent = user.email;
-            loginSection.style.display = 'none';
-            signupSection.style.display = 'none';
-            resetSection.style.display = 'none';
-            userSection.style.display = 'block';
-          } else {
-            // If user section doesn't exist, redirect to index
-            localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
-            localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
-            localStorage.setItem('hourflow_auth_checked', 'completed');
-            window.location.href = 'index.html';
-          }
-        }
-        
-        // Function to hide user info when logged out
-        function hideUserInfo() {
-          const userSection = document.getElementById('user-section');
-          if (userSection) {
-            userSection.style.display = 'none';
-            loginSection.style.display = 'block';
-          }
-        }
-        
-        onAuthStateChanged(auth, (user) => {
-          if (user) {
-            // User is signed in
-            console.log('User is signed in:', user.email);
-            // Set a license for authenticated users
-            localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
-            localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
-            localStorage.setItem('hourflow_auth_checked', 'completed');
-            showUserInfo(user);
-          } else {
-            // User is signed out
-            console.log('User is signed out');
-            hideUserInfo();
-          }
-        });
-      }
+      // Log initial state
+      debugLog('Firebase initialized');
+      debugLog('Current URL: ' + window.location.href);
       
-      // DOM content loaded event
-      document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM content loaded');
-        
-        // Hide loading message and show login form after a short delay
-        setTimeout(function() {
-          const loadingMessage = document.getElementById('loading-message');
-          if (loadingMessage) {
-            loadingMessage.style.display = 'none';
-          }
-          
-          const loginSection = document.getElementById('login-section');
-          if (loginSection) {
-            loginSection.style.display = 'block';
-          }
-          
-          // Check license status
-          checkLicenseStatus();
-          
-          // Check if user is logged in
-          checkAuthState();
-          
-          // Clear the auth_checked flag if we're on the login page
-          // This ensures proper flow between license and login pages
-          if (localStorage.getItem('hourflow_auth_checked') === 'pending') {
-              localStorage.setItem('hourflow_auth_checked', 'completed');
-          }
-        }, 1000); // Wait 1 second to ensure everything is loaded
-      });
-    </script>
-    
-<script>
-
-    // Elements
-    let loginForm = document.getElementById('login-form');
-    const signupForm = document.getElementById('signup-form');
-    const resetForm = document.getElementById('reset-password-form');
-    let googleLoginBtn = document.getElementById('google-login');
-    const loginSection = document.getElementById('login-section');
-    const signupSection = document.getElementById('signup-section');
-    const resetSection = document.getElementById('reset-password-section');
-    const loginLink = document.getElementById('login-link');
-    const signupLink = document.getElementById('signup-link');
-    const forgotPasswordLink = document.getElementById('forgot-password-link');
-    const backToLoginLink = document.getElementById('back-to-login');
-
-    // Helpers
-    function showSection(section) {
+      // Clear any existing session flags to prevent loops
+      sessionStorage.removeItem('auth_redirect_in_progress');
+      sessionStorage.removeItem('license_check_in_progress');
+      
+      // DOM Elements
+      const loginForm = document.getElementById('login-form');
+      const signupForm = document.getElementById('signup-form');
+      const resetForm = document.getElementById('reset-password-form');
+      const loginSection = document.getElementById('login-section');
+      const signupSection = document.getElementById('signup-section');
+      const resetSection = document.getElementById('reset-password-section');
+      const signupLink = document.getElementById('signup-link');
+      const loginLink = document.getElementById('login-link');
+      const forgotPasswordLink = document.getElementById('forgot-password-link');
+      const backToLoginLink = document.getElementById('back-to-login-link');
+      const googleLoginBtn = document.getElementById('google-login-btn');
+      
+      // Helper function to switch between sections
+      function showSection(section) {
         loginSection.style.display = 'none';
         signupSection.style.display = 'none';
         resetSection.style.display = 'none';
         section.style.display = 'block';
-    }
-
-    // Check license status and ensure we don't get redirected back to license page
-    function checkLicenseStatus() {
-        // First, ensure we have a valid license for the login page
-        const licenseKey = localStorage.getItem('hourflow_license');
-        const verifiedLicense = localStorage.getItem('hourflow_verified_license');
+      }
+      
+      // Helper function to store user info and set license
+      function processSuccessfulLogin(user) {
+        debugLog('Login successful, storing user info');
         
-        // If no license or not verified, set a temporary one for the login page
-        if (!licenseKey || !verifiedLicense) {
-            localStorage.setItem('hourflow_license', 'LOGIN-PAGE-LICENSE');
-            localStorage.setItem('hourflow_verified_license', 'LOGIN-PAGE-LICENSE');
-        }
+        // Store user info
+        const userInfo = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || user.email.split('@')[0],
+          photoURL: user.photoURL || null,
+          lastLogin: new Date().toISOString()
+        };
+        localStorage.setItem('currentUser', JSON.stringify(userInfo));
         
-        // Update the license status display
-        const licenseStatus = document.getElementById('license-status');
-        const licenseBadge = document.getElementById('license-badge');
-        const licenseText = document.getElementById('license-text');
+        // Set license
+        localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
+        localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
         
-        if (!licenseStatus || !licenseBadge || !licenseText) return;
+        // Set manual login flag
+        localStorage.setItem('manual_login_completed', 'true');
         
-        if (licenseKey && verifiedLicense && licenseKey === verifiedLicense) {
-            licenseBadge.classList.add('valid');
-            licenseText.innerHTML = 'Premium License Active';
-            licenseBadge.innerHTML = '<i class="fas fa-check-circle"></i> Premium License Active';
-        } else if (licenseKey) {
-            licenseBadge.classList.add('invalid');
-            licenseText.innerHTML = 'License Not Verified';
-            licenseBadge.innerHTML = '<i class="fas fa-exclamation-circle"></i> License Not Verified <a href="license.html" class="link">Verify</a>';
-        } else {
-            licenseBadge.classList.remove('valid', 'invalid');
-            licenseText.innerHTML = 'No License Found';
-            licenseBadge.innerHTML = '<i class="fas fa-key"></i> No License Found <a href="license.html" class="link">Add License</a>';
-        }
-    }
-    
-    // Login
-    if (loginForm) {
+        // Clear any redirect flags
+        sessionStorage.removeItem('auth_redirect_in_progress');
+        sessionStorage.removeItem('license_check_in_progress');
+        
+        debugLog('Redirecting to app...');
+        window.location.replace('index.html');
+      }
+      
+      // Email/Password Login
+      if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            
-            // Show loading state
-            const loginButton = loginForm.querySelector('button[type="submit"]');
-            const originalButtonText = loginButton.innerHTML;
-            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-            loginButton.disabled = true;
-            
-            signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    // Store user info in localStorage
-                    const user = userCredential.user;
-                    const userInfo = {
-                        uid: user.uid,
-                        email: user.email,
-                        displayName: user.displayName || user.email.split('@')[0],
-                        photoURL: user.photoURL || null,
-                        lastLogin: new Date().toISOString()
-                    };
-                    localStorage.setItem('currentUser', JSON.stringify(userInfo));
-                    
-                    // Set a default license for authenticated users
-                    localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
-                    localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
-                    
-                    // Clear any redirect flags to prevent loops
-                    sessionStorage.removeItem('auth_redirect_in_progress');
-                    sessionStorage.removeItem('license_check_in_progress');
-                    
-                    // Show success message
-                    const loginSuccess = document.getElementById('login-success') || document.createElement('div');
-                    loginSuccess.className = 'success-message';
-                    loginSuccess.style.display = 'block';
-                    loginSuccess.textContent = 'Login successful! Redirecting to app...';
-                    
-                    if (!document.getElementById('login-success')) {
-                        loginForm.appendChild(loginSuccess);
-                    }
-                    
-                    // Redirect after a short delay
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1000);
-                })
-                .catch((err) => {
-                    // Reset button
-                    loginButton.innerHTML = originalButtonText;
-                    loginButton.disabled = false;
-                    
-                    // Show error
-                    const loginError = document.getElementById('login-error');
-                    if (loginError) {
-                        loginError.textContent = 'Login failed: ' + err.message;
-                        loginError.style.display = 'block';
-                    } else {
-                        alert('Login failed: ' + err.message);
-                    }
-                });
+          e.preventDefault();
+          debugLog('Login form submitted');
+          
+          const email = document.getElementById('login-email').value;
+          const password = document.getElementById('login-password').value;
+          const loginError = document.getElementById('login-error');
+          const loginButton = loginForm.querySelector('button[type="submit"]');
+          
+          // Show loading state
+          loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+          loginButton.disabled = true;
+          loginError.style.display = 'none';
+          
+          signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+              debugLog('Firebase login successful');
+              processSuccessfulLogin(userCredential.user);
+            })
+            .catch((error) => {
+              debugLog('Login error: ' + error.message);
+              loginButton.innerHTML = 'Log In';
+              loginButton.disabled = false;
+              loginError.textContent = 'Login failed: ' + error.message;
+              loginError.style.display = 'block';
+            });
         });
-    }
-
-    // Sign up
-    if (signupForm) {
-        signupForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            const confirmPassword = document.getElementById('signup-confirm-password').value;
-
-            if (password !== confirmPassword) {
-                alert('Passwords do not match.');
-                return;
-            }
-
-            createUser(auth, email, password)
-                .then(() => {
-                    alert('Account created! Please log in.');
-                    showSection(loginSection);
-                })
-                .catch((err) => {
-                    alert('Signup failed: ' + err.message);
-                });
-        });
-    }
-
-    // Reset password
-    if (resetForm) {
-        resetForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('reset-email').value;
-            sendPasswordResetEmail(auth, email)
-                .then(() => {
-                    alert('Password reset email sent.');
-                    showSection(loginSection);
-                })
-                .catch((err) => {
-                    alert('Reset failed: ' + err.message);
-                });
-        });
-    }
-
-    // Google login
-    if (googleLoginBtn) {
+      }
+      
+      // Google Login
+      if (googleLoginBtn) {
         googleLoginBtn.addEventListener('click', () => {
-            // Show loading state
-            const originalButtonText = googleLoginBtn.innerHTML;
-            googleLoginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting with Google...';
-            googleLoginBtn.disabled = true;
-            
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    // Store user info in localStorage
-                    const user = result.user;
-                    const userInfo = {
-                        uid: user.uid,
-                        email: user.email,
-                        displayName: user.displayName || user.email.split('@')[0],
-                        photoURL: user.photoURL || null,
-                        lastLogin: new Date().toISOString()
-                    };
-                    localStorage.setItem('currentUser', JSON.stringify(userInfo));
-                    
-                    // Always set a license for authenticated users
-                    localStorage.setItem('hourflow_license', 'AUTH-USER-LICENSE');
-                    localStorage.setItem('hourflow_verified_license', 'AUTH-USER-LICENSE');
-                    
-                    // Clear any redirect flags to prevent loops
-                    sessionStorage.removeItem('auth_redirect_in_progress');
-                    sessionStorage.removeItem('license_check_in_progress');
-                    
-                    // Show success message
-                    const loginSuccess = document.getElementById('login-success') || document.createElement('div');
-                    loginSuccess.className = 'success-message';
-                    loginSuccess.style.display = 'block';
-                    loginSuccess.textContent = 'Google login successful! Redirecting to app...';
-                    
-                    if (!document.getElementById('login-success')) {
-                        const loginForm = document.getElementById('login-form');
-                        if (loginForm) {
-                            loginForm.appendChild(loginSuccess);
-                        }
-                    }
-                    
-                    // Redirect after a short delay
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1000);
-                })
-                .catch((err) => {
-                    // Reset button
-                    googleLoginBtn.innerHTML = originalButtonText;
-                    googleLoginBtn.disabled = false;
-                    
-                    // Show error
-                    const loginError = document.getElementById('login-error');
-                    if (loginError) {
-                        loginError.textContent = 'Google login failed: ' + err.message;
-                        loginError.style.display = 'block';
-                    } else {
-                        alert('Google login failed: ' + err.message);
-                    }
-                });
+          debugLog('Google login button clicked');
+          
+          // Show loading state
+          const originalText = googleLoginBtn.innerHTML;
+          googleLoginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting with Google...';
+          googleLoginBtn.disabled = true;
+          
+          const provider = new GoogleAuthProvider();
+          signInWithPopup(auth, provider)
+            .then((result) => {
+              debugLog('Google login successful');
+              processSuccessfulLogin(result.user);
+            })
+            .catch((error) => {
+              debugLog('Google login error: ' + error.message);
+              googleLoginBtn.innerHTML = originalText;
+              googleLoginBtn.disabled = false;
+              const loginError = document.getElementById('login-error');
+              loginError.textContent = 'Google login failed: ' + error.message;
+              loginError.style.display = 'block';
+            });
         });
-    }
-
-    // Navigation between forms
-    if (signupLink) {
+      }
+      
+      // Sign Up
+      if (signupForm) {
+        signupForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          debugLog('Signup form submitted');
+          
+          const email = document.getElementById('signup-email').value;
+          const password = document.getElementById('signup-password').value;
+          const confirmPassword = document.getElementById('signup-confirm-password').value;
+          const signupError = document.getElementById('signup-error');
+          const signupButton = signupForm.querySelector('button[type="submit"]');
+          
+          // Validate passwords match
+          if (password !== confirmPassword) {
+            signupError.textContent = 'Passwords do not match';
+            signupError.style.display = 'block';
+            return;
+          }
+          
+          // Show loading state
+          signupButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+          signupButton.disabled = true;
+          signupError.style.display = 'none';
+          
+          createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+              debugLog('Account created successfully');
+              processSuccessfulLogin(userCredential.user);
+            })
+            .catch((error) => {
+              debugLog('Signup error: ' + error.message);
+              signupButton.innerHTML = 'Sign Up';
+              signupButton.disabled = false;
+              signupError.textContent = 'Signup failed: ' + error.message;
+              signupError.style.display = 'block';
+            });
+        });
+      }
+      
+      // Reset Password
+      if (resetForm) {
+        resetForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          debugLog('Reset password form submitted');
+          
+          const email = document.getElementById('reset-email').value;
+          const resetError = document.getElementById('reset-error');
+          const resetButton = resetForm.querySelector('button[type="submit"]');
+          
+          // Show loading state
+          resetButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending reset link...';
+          resetButton.disabled = true;
+          resetError.style.display = 'none';
+          
+          sendPasswordResetEmail(auth, email)
+            .then(() => {
+              debugLog('Password reset email sent');
+              resetButton.innerHTML = 'Reset link sent!';
+              resetButton.disabled = false;
+              
+              // Show success message and return to login after delay
+              setTimeout(() => {
+                showSection(loginSection);
+                resetButton.innerHTML = 'Send Reset Link';
+              }, 2000);
+            })
+            .catch((error) => {
+              debugLog('Reset password error: ' + error.message);
+              resetButton.innerHTML = 'Send Reset Link';
+              resetButton.disabled = false;
+              resetError.textContent = 'Failed to send reset link: ' + error.message;
+              resetError.style.display = 'block';
+            });
+        });
+      }
+      
+      // Navigation between forms
+      if (signupLink) {
         signupLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            showSection(signupSection);
+          e.preventDefault();
+          showSection(signupSection);
         });
-    }
-
-    if (loginLink) {
+      }
+      
+      if (loginLink) {
         loginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            showSection(loginSection);
+          e.preventDefault();
+          showSection(loginSection);
         });
-    }
-
-    if (forgotPasswordLink) {
+      }
+      
+      if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            showSection(resetSection);
+          e.preventDefault();
+          showSection(resetSection);
         });
-    }
-
-    if (backToLoginLink) {
+      }
+      
+      if (backToLoginLink) {
         backToLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            showSection(loginSection);
+          e.preventDefault();
+          showSection(loginSection);
         });
-    }
-});
-</script>
-
+      }
+    </script>
 </body>
 </html>
