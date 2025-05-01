@@ -1,224 +1,246 @@
 /**
- * user-storage.js - v3.0
+ * user-storage.js - DEFINITIEVE VERSIE
  * Zorgt voor gebruikersspecifieke gegevensopslag in localStorage
  * Elke gebruiker heeft zijn eigen geïsoleerde gegevens
  */
 
-const userStorage = (function() {
-    // Private variabelen
-    let _userId = null;
-    let _debug = true;
+// Eenvoudige implementatie van userStorage
+const userStorage = {
+    // Debug mode
+    debug: true,
     
-    // Log een bericht naar de console als debug is ingeschakeld
-    function _log(message, data) {
-        if (_debug) {
+    // Gebruikers-ID
+    userId: null,
+    
+    // Geeft aan of de module is geïnitialiseerd
+    initialized: false,
+    
+    // Log een bericht naar de console
+    log: function(message, data) {
+        if (this.debug) {
             if (data !== undefined) {
                 console.log(`[UserStorage] ${message}`, data);
             } else {
                 console.log(`[UserStorage] ${message}`);
             }
         }
-    }
-    
-    // Haal de huidige gebruiker op uit localStorage
-    function _getCurrentUser() {
-        try {
-            const userJson = localStorage.getItem('currentUser');
-            if (!userJson) return null;
-            
-            const user = JSON.parse(userJson);
-            return user && user.uid ? user : null;
-        } catch (e) {
-            console.error('[UserStorage] Error getting current user:', e);
-            return null;
-        }
-    }
+    },
     
     // Initialiseer de module
-    function _init() {
-        const user = _getCurrentUser();
-        if (user) {
-            _userId = user.uid;
-            _log(`Geïnitialiseerd voor gebruiker: ${_userId}`);
-        } else {
-            _userId = null;
-            console.warn('[UserStorage] Geen gebruiker ingelogd, gebruikersspecifieke opslag is niet mogelijk');
+    init: function() {
+        if (this.initialized) {
+            this.log('Already initialized');
+            return true;
         }
-        return !!_userId;
-    }
+        
+        try {
+            // Haal gebruiker op uit localStorage
+            const userJson = localStorage.getItem('currentUser');
+            if (userJson) {
+                const user = JSON.parse(userJson);
+                if (user && user.uid) {
+                    this.userId = user.uid;
+                    this.initialized = true;
+                    this.log('Initialized for user:', this.userId);
+                    return true;
+                }
+            }
+            
+            this.userId = null;
+            this.initialized = false;
+            console.warn('[UserStorage] No user logged in, user-specific storage not possible');
+            return false;
+        } catch (e) {
+            console.error('[UserStorage] Error initializing:', e);
+            this.userId = null;
+            this.initialized = false;
+            return false;
+        }
+    },
+    
+    // Haal de huidige gebruikers-ID op
+    getCurrentUserId: function() {
+        if (!this.initialized) {
+            this.init();
+        }
+        return this.userId;
+    },
     
     // Maak een gebruikersspecifieke sleutel
-    function _getUserKey(key) {
-        if (!_userId) {
-            _log(`Geen gebruiker ingelogd, gebruik globale sleutel: ${key}`);
+    getUserKey: function(key) {
+        if (!this.initialized) {
+            this.init();
+        }
+        
+        if (!this.userId) {
+            this.log(`No user logged in, using global key: ${key}`);
             return key;
         }
         
-        const userKey = `user_${_userId}_${key}`;
+        const userKey = `user_${this.userId}_${key}`;
         return userKey;
-    }
+    },
     
-    // Public API
-    return {
-        // Initialiseer de module
-        init: function() {
-            return _init();
-        },
+    // Haal een item op uit localStorage
+    getItem: function(key, defaultValue = null) {
+        if (!this.initialized) {
+            this.init();
+        }
         
-        // Haal de huidige gebruikers-ID op
-        getCurrentUserId: function() {
-            if (!_userId) _init();
-            return _userId;
-        },
-        
-        // Haal een item op uit localStorage
-        getItem: function(key, defaultValue = null) {
-            if (!_userId) _init();
-            const userKey = _getUserKey(key);
-            
-            try {
-                const value = localStorage.getItem(userKey);
-                if (value !== null) {
-                    _log(`Item opgehaald: ${key}`);
-                    return value;
-                }
-                _log(`Geen item gevonden: ${key}, standaardwaarde gebruikt`);
-                return defaultValue;
-            } catch (e) {
-                console.error(`[UserStorage] Fout bij ophalen van ${key}:`, e);
-                return defaultValue;
+        const userKey = this.getUserKey(key);
+        try {
+            const value = localStorage.getItem(userKey);
+            if (value !== null) {
+                this.log(`Item retrieved: ${key}`);
+                return value;
             }
-        },
+            this.log(`No item found: ${key}, using default value`);
+            return defaultValue;
+        } catch (e) {
+            console.error(`[UserStorage] Error retrieving ${key}:`, e);
+            return defaultValue;
+        }
+    },
+    
+    // Sla een item op in localStorage
+    setItem: function(key, value) {
+        if (!this.initialized) {
+            this.init();
+        }
         
-        // Sla een item op in localStorage
-        setItem: function(key, value) {
-            if (!_userId) _init();
-            const userKey = _getUserKey(key);
-            
-            try {
-                localStorage.setItem(userKey, value);
-                _log(`Item opgeslagen: ${key}`);
-                return true;
-            } catch (e) {
-                console.error(`[UserStorage] Fout bij opslaan van ${key}:`, e);
-                return false;
-            }
-        },
-        
-        // Verwijder een item uit localStorage
-        removeItem: function(key) {
-            if (!_userId) _init();
-            const userKey = _getUserKey(key);
-            
-            try {
-                localStorage.removeItem(userKey);
-                _log(`Item verwijderd: ${key}`);
-                return true;
-            } catch (e) {
-                console.error(`[UserStorage] Fout bij verwijderen van ${key}:`, e);
-                return false;
-            }
-        },
-        
-        // Haal een JSON-item op uit localStorage
-        getJSON: function(key, defaultValue = null) {
-            try {
-                const value = this.getItem(key);
-                if (value === null) return defaultValue;
-                
-                const parsedValue = JSON.parse(value);
-                _log(`JSON opgehaald: ${key}`);
-                return parsedValue;
-            } catch (e) {
-                console.error(`[UserStorage] Fout bij parsen van JSON voor ${key}:`, e);
-                return defaultValue;
-            }
-        },
-        
-        // Sla een JSON-item op in localStorage
-        setJSON: function(key, value) {
-            try {
-                const jsonValue = JSON.stringify(value);
-                const result = this.setItem(key, jsonValue);
-                _log(`JSON opgeslagen: ${key}`);
-                return result;
-            } catch (e) {
-                console.error(`[UserStorage] Fout bij omzetten naar JSON voor ${key}:`, e);
-                return false;
-            }
-        },
-        
-        // Migreer bestaande gegevens van algemene localStorage naar gebruikersspecifieke localStorage
-        migrateData: function(keys) {
-            if (!_userId) {
-                if (!_init()) {
-                    console.warn('[UserStorage] Geen gebruiker ingelogd, migratie is niet mogelijk');
-                    return false;
-                }
-            }
-            
-            console.log(`[UserStorage] Migreren van gegevens naar gebruiker ${_userId}...`);
-            let migrated = 0;
-            
-            keys.forEach(key => {
-                try {
-                    // Controleer of er al gebruikersspecifieke gegevens zijn
-                    const userKey = _getUserKey(key);
-                    if (localStorage.getItem(userKey) !== null) {
-                        _log(`Gebruikersspecifieke gegevens voor ${key} bestaan al`);
-                        return;
-                    }
-                    
-                    // Haal de algemene gegevens op
-                    const value = localStorage.getItem(key);
-                    if (value !== null) {
-                        // Sla de gegevens op onder de gebruikersspecifieke sleutel
-                        localStorage.setItem(userKey, value);
-                        _log(`Gegevens voor ${key} gemigreerd naar gebruikersspecifieke opslag`);
-                        migrated++;
-                    } else {
-                        _log(`Geen gegevens gevonden voor ${key}, niets om te migreren`);
-                    }
-                } catch (e) {
-                    console.error(`[UserStorage] Fout bij het migreren van ${key}:`, e);
-                }
-            });
-            
-            console.log(`[UserStorage] Migratie voltooid: ${migrated} items gemigreerd`);
+        const userKey = this.getUserKey(key);
+        try {
+            localStorage.setItem(userKey, value);
+            this.log(`Item stored: ${key}`);
             return true;
-        },
+        } catch (e) {
+            console.error(`[UserStorage] Error storing ${key}:`, e);
+            return false;
+        }
+    },
+    
+    // Verwijder een item uit localStorage
+    removeItem: function(key) {
+        if (!this.initialized) {
+            this.init();
+        }
         
-        // Test de userStorage module
-        test: function() {
-            if (!_userId) {
-                if (!_init()) {
-                    console.warn('[UserStorage] Test mislukt: Geen gebruiker ingelogd');
-                    return false;
-                }
+        const userKey = this.getUserKey(key);
+        try {
+            localStorage.removeItem(userKey);
+            this.log(`Item removed: ${key}`);
+            return true;
+        } catch (e) {
+            console.error(`[UserStorage] Error removing ${key}:`, e);
+            return false;
+        }
+    },
+    
+    // Haal een JSON-item op uit localStorage
+    getJSON: function(key, defaultValue = null) {
+        try {
+            const value = this.getItem(key);
+            if (value === null) {
+                return defaultValue;
             }
             
-            try {
-                const testData = { test: true, timestamp: Date.now() };
-                this.setJSON('__test', testData);
-                const retrievedData = this.getJSON('__test');
-                
-                const success = JSON.stringify(testData) === JSON.stringify(retrievedData);
-                if (success) {
-                    console.log('[UserStorage] Test geslaagd: Gegevensintegriteit geverifieerd');
-                } else {
-                    console.error('[UserStorage] Test mislukt: Gegevensintegriteit probleem');
-                }
-                
-                this.removeItem('__test');
-                return success;
-            } catch (e) {
-                console.error('[UserStorage] Test mislukt:', e);
+            const parsedValue = JSON.parse(value);
+            this.log(`JSON retrieved: ${key}`);
+            return parsedValue;
+        } catch (e) {
+            console.error(`[UserStorage] Error parsing JSON for ${key}:`, e);
+            return defaultValue;
+        }
+    },
+    
+    // Sla een JSON-item op in localStorage
+    setJSON: function(key, value) {
+        try {
+            const jsonValue = JSON.stringify(value);
+            const result = this.setItem(key, jsonValue);
+            this.log(`JSON stored: ${key}`);
+            return result;
+        } catch (e) {
+            console.error(`[UserStorage] Error converting to JSON for ${key}:`, e);
+            return false;
+        }
+    },
+    
+    // Migreer bestaande gegevens van algemene localStorage naar gebruikersspecifieke localStorage
+    migrateData: function(keys) {
+        if (!this.initialized) {
+            if (!this.init()) {
+                console.warn('[UserStorage] No user logged in, migration not possible');
                 return false;
             }
         }
-    };
-})();
+        
+        console.log(`[UserStorage] Migrating data to user ${this.userId}...`);
+        let migrated = 0;
+        
+        keys.forEach(key => {
+            try {
+                // Controleer of er al gebruikersspecifieke gegevens zijn
+                const userKey = this.getUserKey(key);
+                if (localStorage.getItem(userKey) !== null) {
+                    this.log(`User-specific data for ${key} already exists`);
+                    return;
+                }
+                
+                // Haal de algemene gegevens op
+                const value = localStorage.getItem(key);
+                if (value !== null) {
+                    // Sla de gegevens op onder de gebruikersspecifieke sleutel
+                    localStorage.setItem(userKey, value);
+                    this.log(`Data for ${key} migrated to user-specific storage`);
+                    migrated++;
+                } else {
+                    this.log(`No data found for ${key}, nothing to migrate`);
+                }
+            } catch (e) {
+                console.error(`[UserStorage] Error migrating ${key}:`, e);
+            }
+        });
+        
+        console.log(`[UserStorage] Migration completed: ${migrated} items migrated`);
+        return true;
+    },
+    
+    // Test de userStorage module
+    test: function() {
+        if (!this.initialized) {
+            if (!this.init()) {
+                console.warn('[UserStorage] Test failed: No user logged in');
+                return false;
+            }
+        }
+        
+        try {
+            const testData = { test: true, timestamp: Date.now() };
+            this.setJSON('__test', testData);
+            const retrievedData = this.getJSON('__test');
+            
+            const success = JSON.stringify(testData) === JSON.stringify(retrievedData);
+            if (success) {
+                console.log('[UserStorage] Test successful: Data integrity verified');
+            } else {
+                console.error('[UserStorage] Test failed: Data integrity issue');
+            }
+            
+            this.removeItem('__test');
+            return success;
+        } catch (e) {
+            console.error('[UserStorage] Test failed:', e);
+            return false;
+        }
+    }
+};
 
+// Initialiseer userStorage direct bij het laden van het script
+(function() {
+    console.log('[UserStorage] Auto-initializing...');
+    userStorage.init();
+})();
 
 // Export the userStorage module
 if (typeof module !== 'undefined' && module.exports) {
