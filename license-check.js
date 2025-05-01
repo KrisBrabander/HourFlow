@@ -8,11 +8,12 @@ async function checkLicense() {
     return true;
   }
   
-  // Controleer of we in een Firebase auth redirect zitten
-  const authRedirectInProgress = sessionStorage.getItem('auth_redirect_in_progress');
-  if (authRedirectInProgress === 'true') {
-    console.log('Firebase auth redirect in progress, licentiecontrole overgeslagen');
-    return true;
+  // Controleer of de gebruiker is ingelogd
+  const currentUser = localStorage.getItem('currentUser');
+  if (!currentUser) {
+    console.log('Gebruiker niet ingelogd, auth check zal doorverwijzen');
+    // Laat de auth-check.js de redirect naar login afhandelen
+    return false;
   }
 
   // Controleer op URL parameter licentie
@@ -45,8 +46,8 @@ async function checkLicense() {
   // Als er geen licentie is, redirect naar de licentiepagina
   if (!licenseKey) {
     console.log('Geen licentiesleutel gevonden. Doorsturen naar licentiepagina.');
-    // Markeer dat we bezig zijn met een licentiecontrole om Firebase auth te laten weten
-    sessionStorage.setItem('license_check_in_progress', 'true');
+    // Zorg ervoor dat we niet in een oneindige loop terechtkomen
+    sessionStorage.removeItem('auth_redirect_in_progress');
     redirectToLicensePage();
     return false;
   }
@@ -97,8 +98,6 @@ async function checkLicense() {
     } else {
       console.log('Invalid license key via API. Redirecting to license page.');
       localStorage.removeItem('hourflow_license');
-      // Markeer dat we bezig zijn met een licentiecontrole om Firebase auth te laten weten
-      sessionStorage.setItem('license_check_in_progress', 'true');
       redirectToLicensePage();
       return false;
     }
@@ -120,8 +119,6 @@ function redirectToLicensePage() {
     const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
     const licensePath = basePath + 'license.html';
     console.log('Redirecting to license page:', licensePath);
-    // Markeer dat we bezig zijn met een licentiecontrole
-    sessionStorage.setItem('license_check_in_progress', 'true');
     window.location.href = licensePath;
   }
 }
