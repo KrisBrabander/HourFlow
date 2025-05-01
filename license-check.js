@@ -52,19 +52,24 @@ async function checkLicense() {
     return false;
   }
   
-  // Valideer de licentie met een vast wachtwoord of via API
-  // Sterk wachtwoord dat voor iedereen hetzelfde is
+  // Valideer de licentie met een vast wachtwoord
+  // Eén sterke licentiesleutel die voor iedereen werkt
+  const masterLicenseKey = 'HourFlow-2025-Enterprise-XJ7K9M2P5R8T'; // Moeilijke sleutel die voor iedereen werkt
+  
+  // Lijst met geldige sleutels (voor backwards compatibility)
   const validPasswords = [
-    'K1VngY5&k,eB#o`',  // Legacy sleutel
-    'DEMO-KEY-1234',     // Demo sleutel
-    'TEST-KEY-5678',     // Test sleutel
+    masterLicenseKey,      // Hoofdsleutel voor alle gebruikers
+    'K1VngY5&k,eB#o`',    // Legacy sleutel
+    'DEMO-KEY-1234',       // Demo sleutel
+    'TEST-KEY-5678',       // Test sleutel
     'HOUR-FLOW-2025-PREMIUM', // Premium licentie
-    'HOUR-FLOW-2025-STANDARD' // Standaard licentie
+    'HOUR-FLOW-2025-STANDARD', // Standaard licentie
+    'AUTH-USER-LICENSE'    // Automatisch toegekende licentie na login
   ];
   
-  // Check eerst of het een van onze bekende geldige sleutels is
+  // Check of het een van onze bekende geldige sleutels is
   if (validPasswords.includes(licenseKey)) {
-    console.log('License key verified locally, access granted');
+    console.log('Licentiesleutel lokaal geverifieerd, toegang verleend');
     return true;
   }
   
