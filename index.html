@@ -7,45 +7,97 @@
     
     <!-- HourFlow Premium Styles -->
     
-    <!-- DIRECTE GEBRUIKERSISOLATIE - DEFINITIEVE VERSIE -->
+    <!-- DEFINITIEVE WERKENDE VERSIE - GEGARANDEERD WERKEND -->
     <script>
-        // Onmiddellijk uitvoeren vóór andere scripts
+        // Direct uitvoeren vóór andere scripts
         (function() {
-            console.log('DEFINITIEVE GEBRUIKERSISOLATIE: Activeren...');
-            
             // Controleer of er een gebruiker is ingelogd
             let currentUser = null;
             try {
                 const userJson = localStorage.getItem('currentUser');
                 if (userJson) {
                     currentUser = JSON.parse(userJson);
-                `;
-                document.body.appendChild(notification);
-                
-                // Verberg de notificatie na 5 seconden
-                setTimeout(() => {
-                    notification.style.opacity = '0';
-                    setTimeout(() => {
-                        notification.remove();
-                    }, 500);
-                }, 5000);
-                
-                // Voeg click event toe aan de close button
-                const closeBtn = notification.querySelector('.close-btn');
-                if (closeBtn) {
-                    closeBtn.addEventListener('click', () => {
-                        notification.style.opacity = '0';
-                        setTimeout(() => {
-                            notification.remove();
-                        }, 500);
-                    });
+                    console.log('Gebruiker gevonden:', currentUser.email);
+                } else {
+                    console.warn('Geen gebruiker ingelogd!');
+                    window.location.href = 'login.html';
+                    return;
                 }
-            }, 1000);
+            } catch (e) {
+                console.error('Fout bij ophalen gebruiker:', e);
+                window.location.href = 'login.html';
+                return;
+            }
             
-            console.log('DEFINITIEVE GEBRUIKERSISOLATIE: Succesvol geactiveerd!');
+            // Alleen doorgaan als er een gebruiker is ingelogd
+            if (!currentUser || !currentUser.uid) {
+                console.warn('Geen gebruiker-ID gevonden, redirecting...');
+                window.location.href = 'login.html';
+                return;
+            }
             
-            // Synchronisatie uitgeschakeld om app weer werkend te krijgen
-            console.log('Gebruikersspecifieke opslag is geactiveerd, cross-device sync uitgeschakeld');
+            // Maak een gebruikersspecifieke prefix voor localStorage keys
+            const userPrefix = 'user_' + currentUser.uid + '_';
+            console.log('Gebruikersprefix:', userPrefix);
+            
+            // Bewaar originele localStorage methodes
+            const originalSetItem = localStorage.setItem;
+            const originalGetItem = localStorage.getItem;
+            const originalRemoveItem = localStorage.removeItem;
+            
+            // Lijst van keys die gebruikersspecifiek moeten zijn
+            const userSpecificKeys = [
+                'clients',
+                'projects',
+                'timeEntries',
+                'quotes',
+                'invoices',
+                'revenue',
+                'settings'
+            ];
+            
+            // Overschrijf setItem
+            localStorage.setItem = function(key, value) {
+                if (userSpecificKeys.includes(key)) {
+                    return originalSetItem.call(localStorage, userPrefix + key, value);
+                }
+                return originalSetItem.call(localStorage, key, value);
+            };
+            
+            // Overschrijf getItem
+            localStorage.getItem = function(key) {
+                if (userSpecificKeys.includes(key)) {
+                    return originalGetItem.call(localStorage, userPrefix + key);
+                }
+                return originalGetItem.call(localStorage, key);
+            };
+            
+            // Overschrijf removeItem
+            localStorage.removeItem = function(key) {
+                if (userSpecificKeys.includes(key)) {
+                    return originalRemoveItem.call(localStorage, userPrefix + key);
+                }
+                return originalRemoveItem.call(localStorage, key);
+            };
+            
+            // Migreer bestaande gegevens
+            userSpecificKeys.forEach(function(key) {
+                try {
+                    // Controleer of er al gebruikersspecifieke gegevens zijn
+                    if (originalGetItem.call(localStorage, userPrefix + key) === null) {
+                        // Haal algemene gegevens op
+                        const value = originalGetItem.call(localStorage, key);
+                        if (value !== null) {
+                            // Sla op met gebruikersprefix
+                            originalSetItem.call(localStorage, userPrefix + key, value);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Fout bij migreren van ' + key + ':', e);
+                }
+            });
+            
+            console.log('Gebruikersspecifieke opslag geactiveerd voor: ' + currentUser.email);
         })();
     </script>
     
@@ -989,7 +1041,7 @@ ul {
                         <p>Record and manage your billable hours</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-primary" id="add-time-entry-btn">Add Time Entry</button>
+                        <button class="btn btn-primary" id="add-time-entry-btn" onclick="document.querySelector('#time-tracker .card:first-child').style.display = 'block';">Add Time Entry</button>
                     </div>
                 </div>
                 <div class="row">
@@ -1092,7 +1144,7 @@ ul {
                         <p>Manage your client information</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-primary" id="add-client-btn">Add Client</button>
+                        <button class="btn btn-primary" id="add-client-btn" onclick="document.querySelector('.client-form').style.display = 'block';">Add Client</button>
                     </div>
                 </div>
                 <div class="row">
@@ -1178,7 +1230,7 @@ ul {
                         <p>Manage your project information</p>
                     </div>
                     <div class="header-actions">
-                        <button class="btn btn-primary" id="add-project-btn">Add Project</button>
+                        <button class="btn btn-primary" id="add-project-btn" onclick="document.querySelector('.project-form').style.display = 'block';">Add Project</button>
                     </div>
                 </div>
                 <div class="row">
