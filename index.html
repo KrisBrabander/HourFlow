@@ -211,6 +211,72 @@
             }, 1000);
             
             console.log('DEFINITIEVE GEBRUIKERSISOLATIE: Succesvol geactiveerd!');
+            
+            // CROSS-DEVICE SYNCHRONISATIE
+            // Synchroniseer gegevens tussen apparaten via Firebase
+            setTimeout(async function() {
+                console.log('CROSS-DEVICE SYNC: Starten...');
+                
+                if (typeof firebaseStorage !== 'undefined') {
+                    try {
+                        // Initialiseer Firebase Storage
+                        await firebaseStorage.init();
+                        
+                        // Lijst van keys die gesynchroniseerd moeten worden
+                        const keysToSync = [
+                            'clients',
+                            'projects',
+                            'timeEntries',
+                            'quotes',
+                            'invoices',
+                            'revenue',
+                            'settings'
+                        ];
+                        
+                        // Synchroniseer gegevens
+                        const syncResult = await firebaseStorage.sync(keysToSync);
+                        
+                        if (syncResult) {
+                            console.log('CROSS-DEVICE SYNC: Synchronisatie voltooid!');
+                            
+                            // Toon een notificatie
+                            const notification = document.createElement('div');
+                            notification.className = 'notification success';
+                            notification.innerHTML = `
+                                <i class="fas fa-check-circle"></i>
+                                <span>Je gegevens zijn gesynchroniseerd en beschikbaar op al je apparaten!</span>
+                                <button class="close-btn"><i class="fas fa-times"></i></button>
+                            `;
+                            document.body.appendChild(notification);
+                            
+                            // Verberg de notificatie na 5 seconden
+                            setTimeout(() => {
+                                notification.style.opacity = '0';
+                                setTimeout(() => {
+                                    notification.remove();
+                                }, 500);
+                            }, 5000);
+                            
+                            // Voeg click event toe aan de close button
+                            const closeBtn = notification.querySelector('.close-btn');
+                            if (closeBtn) {
+                                closeBtn.addEventListener('click', () => {
+                                    notification.style.opacity = '0';
+                                    setTimeout(() => {
+                                        notification.remove();
+                                    }, 500);
+                                });
+                            }
+                        } else {
+                            console.log('CROSS-DEVICE SYNC: Geen gegevens gesynchroniseerd');
+                        }
+                    } catch (e) {
+                        console.error('CROSS-DEVICE SYNC: Fout bij synchroniseren:', e);
+                    }
+                } else {
+                    console.warn('CROSS-DEVICE SYNC: Firebase Storage is niet beschikbaar');
+                }
+            }, 2000); // Wacht 2 seconden
         })();
     </script>
     
