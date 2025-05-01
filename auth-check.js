@@ -11,14 +11,6 @@ function checkAuth() {
         return;
     }
     
-    // Check if we're in the middle of a license check
-    const isLicenseCheckInProgress = sessionStorage.getItem('license_check_in_progress');
-    if (isLicenseCheckInProgress === 'true') {
-        console.log('License check in progress, skipping auth check');
-        document.body.style.visibility = 'visible';
-        return;
-    }
-    
     // Check if Firebase is available
     if (typeof firebase === 'undefined' || !firebase.auth) {
         console.log('Firebase not yet available, waiting...');
@@ -31,7 +23,9 @@ function checkAuth() {
     firebase.auth().onAuthStateChanged(user => {
         if (!user) {
             console.log('User not authenticated, redirecting to login page');
-            // Set a flag to prevent license check from redirecting during auth flow
+            // Clear any existing license check flags to prevent loops
+            sessionStorage.removeItem('license_check_in_progress');
+            // Set a flag to indicate we're in auth flow
             sessionStorage.setItem('auth_redirect_in_progress', 'true');
             window.location.href = 'login.html';
         } else {
@@ -40,9 +34,16 @@ function checkAuth() {
             sessionStorage.removeItem('auth_redirect_in_progress');
             // Store user info in localStorage for app use
             storeUserInfo(user);
-            // Clear any auth redirect flags
-            sessionStorage.removeItem('auth_redirect_in_progress');
-            // Make the app visible now that we know user is authenticated
+            
+            // Now check if user has a valid license
+            const licenseKey = localStorage.getItem('hourflow_license');
+            if (!licenseKey && !currentPath.includes('license.html')) {
+                console.log('User authenticated but no license found, redirecting to license page');
+                window.location.href = 'license.html';
+                return;
+            }
+            
+            // Make the app visible now that we know user is authenticated and has a license
             document.body.style.visibility = 'visible';
         }
     });
