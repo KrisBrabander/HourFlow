@@ -1771,9 +1771,9 @@ ul {
     
     <!-- User Storage Migration Script -->
     <script>
-        // Voer deze code direct uit bij het laden van de pagina
-        (function() {
-            console.log('Checking if user data migration is needed...');
+        // Initialiseer userStorage en migreer gegevens direct bij het laden van de pagina
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing userStorage and checking if data migration is needed...');
             
             // Controleer of userStorage beschikbaar is
             if (typeof userStorage === 'undefined') {
@@ -1781,14 +1781,9 @@ ul {
                 return;
             }
             
-            // Controleer of er een gebruiker is ingelogd
-            const userId = userStorage.getCurrentUserId();
-            if (!userId) {
-                console.warn('No user ID found, cannot migrate data');
-                return;
-            }
-            
-            console.log('Starting data migration for user:', userId);
+            // Initialiseer userStorage
+            const initialized = userStorage.init();
+            console.log('UserStorage initialization result:', initialized ? 'SUCCESS' : 'FAILED');
             
             // Lijst van keys die gemigreerd moeten worden
             const keysToMigrate = [
@@ -1802,26 +1797,22 @@ ul {
             ];
             
             // Migreer alle gegevens
-            userStorage.migrateData(keysToMigrate);
+            const migrationResult = userStorage.migrateData(keysToMigrate);
+            console.log('Data migration result:', migrationResult ? 'SUCCESS' : 'FAILED');
             
-            // Voeg een kleine vertraging toe om ervoor te zorgen dat de migratie is voltooid
+            // Test de userStorage module
             setTimeout(function() {
-                console.log('Data migration completed for user:', userId);
+                console.log('Running userStorage test...');
+                const testResult = userStorage.test();
+                console.log('UserStorage test result:', testResult ? 'SUCCESS' : 'FAILED');
                 
-                // Test of de userStorage correct werkt
-                const testData = { test: true, timestamp: Date.now() };
-                userStorage.setJSON('test_data', testData);
-                const retrievedData = userStorage.getJSON('test_data');
-                console.log('UserStorage test - Data stored:', testData);
-                console.log('UserStorage test - Data retrieved:', retrievedData);
-                
-                if (JSON.stringify(testData) === JSON.stringify(retrievedData)) {
-                    console.log('UserStorage test SUCCESSFUL - Data integrity verified');
+                if (testResult) {
+                    console.log('UserStorage is working correctly, user data is isolated');
                 } else {
-                    console.error('UserStorage test FAILED - Data integrity issue detected');
+                    console.error('UserStorage test failed, please check the console for errors');
                 }
             }, 500);
-        })();
+        });
     </script>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -2256,23 +2247,9 @@ ul {
                         
                         console.log('Client object created:', client);
                         
-                        // Haal bestaande clients op uit userStorage of localStorage
-                        var clients = [];
-                        try {
-                            if (typeof userStorage !== 'undefined') {
-                                // Gebruik userStorage voor gebruikersspecifieke opslag
-                                clients = userStorage.getJSON('clients', []);
-                                console.log('Clients geladen uit userStorage:', clients.length);
-                            } else {
-                                // Fallback naar localStorage
-                                clients = JSON.parse(localStorage.getItem('clients') || '[]');
-                                console.log('Clients geladen uit localStorage:', clients.length);
-                            }
-                            if (!Array.isArray(clients)) clients = [];
-                        } catch (e) {
-                            console.error('Error bij laden van clients:', e);
-                            clients = [];
-                        }
+                        // Haal bestaande clients op via dataManager
+                        var clients = dataManager.getData('clients', []);
+                        console.log('Clients geladen voor bewerking:', clients.length);
                         
                         // Controleer of we bewerken of toevoegen
                         var editingClientId = clientFormElement.getAttribute('data-editing-id');
@@ -2317,7 +2294,10 @@ ul {
                 if (clearAllClientsBtn) {
                     clearAllClientsBtn.addEventListener('click', function() {
                         if (confirm('Are you sure you want to delete all clients? This cannot be undone.')) {
-                            localStorage.removeItem('clients');
+                            // Verwijder clients via dataManager
+                            dataManager.removeData('clients');
+                            
+                            // Update app state
                             if (window.app && app.state) {
                                 app.state.clients = [];
                             }
@@ -2333,15 +2313,9 @@ ul {
                     if (!clientsTable) return;
                     
                     try {
-                        // Haal clients op uit userStorage als beschikbaar, anders uit localStorage
-                        let clients = [];
-                        if (typeof userStorage !== 'undefined') {
-                            clients = userStorage.getJSON('clients', []);
-                            console.log('Clients geladen uit userStorage voor tabel:', clients.length);
-                        } else {
-                            clients = JSON.parse(localStorage.getItem('clients') || '[]');
-                            console.log('Clients geladen uit localStorage voor tabel:', clients.length);
-                        }
+                        // Haal clients op via dataManager
+                        let clients = dataManager.getData('clients', []);
+                        console.log('Clients geladen voor tabel:', clients.length);
                         
                         // Maak tabel leeg
                         clientsTable.innerHTML = '';
@@ -2396,21 +2370,6 @@ ul {
                                 
                                 if (!clientId) return;
                                 
-                                // Haal clients op uit userStorage als beschikbaar, anders uit localStorage
-                                let clients = [];
-                                try {
-                                    if (typeof userStorage !== 'undefined') {
-                                        clients = userStorage.getJSON('clients', []);
-                                    } else {
-                                        clients = JSON.parse(localStorage.getItem('clients') || '[]');
-                                    }
-                                    
-                                    // Zoek client
-                                    var clientToEdit = null;
-                                    for (var j = 0; j < clients.length; j++) {
-                                        if (clients[j].id === clientId) {
-                                            clientToEdit = clients[j];
-                                            break;
                                         }
                                     }
                                 } catch (e) {
@@ -2510,15 +2469,9 @@ ul {
                     
                     console.log('Updating client dropdowns:', dropdowns.length, 'found');
                     
-                    // Haal clients op uit localStorage
-                    var clients = [];
-                    try {
-                        clients = JSON.parse(localStorage.getItem('clients') || '[]');
-                        if (!Array.isArray(clients)) clients = [];
-                    } catch (e) {
-                        console.error('Error parsing clients from localStorage:', e);
-                        clients = [];
-                    }
+                    // Haal clients op via dataManager
+                    var clients = dataManager.getData('clients', []);
+                    console.log('Clients geladen voor dropdowns:', clients.length);
                     
                     // Update elke dropdown
                     dropdowns.forEach(function(dropdown) {
@@ -2550,10 +2503,10 @@ ul {
                     });
                 }
                 
-                // Synchroniseer clients tussen localStorage en app state
+                // Synchroniseer clients tussen userStorage/localStorage en app state
                 function syncClientsWithAppState() {
                     if (!window.app || !app.state) {
-                        console.error('App state niet beschikbaar, initialiseren...');
+                        console.log('App state niet beschikbaar, initialiseren...');
                         window.app = {
                             state: {
                                 clients: [],
@@ -2565,15 +2518,8 @@ ul {
                         };
                     }
                     
-                    // Haal clients op uit localStorage
-                    var clients = [];
-                    try {
-                        clients = JSON.parse(localStorage.getItem('clients') || '[]');
-                        if (!Array.isArray(clients)) clients = [];
-                    } catch (e) {
-                        console.error('Error parsing clients from localStorage:', e);
-                        clients = [];
-                    }
+                    // Haal clients op via dataManager
+                    var clients = dataManager.getData('clients', []);
                     
                     // Update app state
                     app.state.clients = clients;
@@ -2598,6 +2544,69 @@ ul {
                 }
             });
         })();
+    </script>
+    
+    <!-- User Storage Helper Functions -->
+    <script>
+        // Hulpfuncties voor het opslaan en ophalen van gegevens via userStorage
+        const dataManager = {
+            // Controleer of userStorage beschikbaar is
+            isUserStorageAvailable: function() {
+                return typeof userStorage !== 'undefined' && userStorage.getCurrentUserId() !== null;
+            },
+            
+            // Haal gegevens op uit userStorage of localStorage
+            getData: function(key, defaultValue = []) {
+                try {
+                    if (this.isUserStorageAvailable()) {
+                        const data = userStorage.getJSON(key, defaultValue);
+                        console.log(`Data opgehaald via userStorage: ${key}`, Array.isArray(data) ? data.length : 'object');
+                        return data;
+                    } else {
+                        const data = JSON.parse(localStorage.getItem(key) || JSON.stringify(defaultValue));
+                        console.log(`Data opgehaald via localStorage: ${key}`, Array.isArray(data) ? data.length : 'object');
+                        return data;
+                    }
+                } catch (e) {
+                    console.error(`Fout bij ophalen van ${key}:`, e);
+                    return defaultValue;
+                }
+            },
+            
+            // Sla gegevens op in userStorage of localStorage
+            saveData: function(key, data) {
+                try {
+                    if (this.isUserStorageAvailable()) {
+                        userStorage.setJSON(key, data);
+                        console.log(`Data opgeslagen via userStorage: ${key}`, Array.isArray(data) ? data.length : 'object');
+                    } else {
+                        localStorage.setItem(key, JSON.stringify(data));
+                        console.log(`Data opgeslagen via localStorage: ${key}`, Array.isArray(data) ? data.length : 'object');
+                    }
+                    return true;
+                } catch (e) {
+                    console.error(`Fout bij opslaan van ${key}:`, e);
+                    return false;
+                }
+            },
+            
+            // Verwijder gegevens uit userStorage of localStorage
+            removeData: function(key) {
+                try {
+                    if (this.isUserStorageAvailable()) {
+                        userStorage.removeItem(key);
+                        console.log(`Data verwijderd via userStorage: ${key}`);
+                    } else {
+                        localStorage.removeItem(key);
+                        console.log(`Data verwijderd via localStorage: ${key}`);
+                    }
+                    return true;
+                } catch (e) {
+                    console.error(`Fout bij verwijderen van ${key}:`, e);
+                    return false;
+                }
+            }
+        };
     </script>
     
     <!-- Force load quotes and invoices -->
