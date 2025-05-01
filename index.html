@@ -1727,6 +1727,61 @@ ul {
     <!-- JavaScript -->
     <script src="license.js"></script>
     <script src="user-storage.js"></script>
+    
+    <!-- User Storage Migration Script -->
+    <script>
+        // Voer deze code direct uit bij het laden van de pagina
+        (function() {
+            console.log('Checking if user data migration is needed...');
+            
+            // Controleer of userStorage beschikbaar is
+            if (typeof userStorage === 'undefined') {
+                console.error('userStorage is not defined, cannot migrate data');
+                return;
+            }
+            
+            // Controleer of er een gebruiker is ingelogd
+            const userId = userStorage.getCurrentUserId();
+            if (!userId) {
+                console.warn('No user ID found, cannot migrate data');
+                return;
+            }
+            
+            console.log('Starting data migration for user:', userId);
+            
+            // Lijst van keys die gemigreerd moeten worden
+            const keysToMigrate = [
+                'clients',
+                'projects',
+                'timeEntries',
+                'quotes',
+                'invoices',
+                'revenue',
+                'settings'
+            ];
+            
+            // Migreer alle gegevens
+            userStorage.migrateData(keysToMigrate);
+            
+            // Voeg een kleine vertraging toe om ervoor te zorgen dat de migratie is voltooid
+            setTimeout(function() {
+                console.log('Data migration completed for user:', userId);
+                
+                // Test of de userStorage correct werkt
+                const testData = { test: true, timestamp: Date.now() };
+                userStorage.setJSON('test_data', testData);
+                const retrievedData = userStorage.getJSON('test_data');
+                console.log('UserStorage test - Data stored:', testData);
+                console.log('UserStorage test - Data retrieved:', retrievedData);
+                
+                if (JSON.stringify(testData) === JSON.stringify(retrievedData)) {
+                    console.log('UserStorage test SUCCESSFUL - Data integrity verified');
+                } else {
+                    console.error('UserStorage test FAILED - Data integrity issue detected');
+                }
+            }, 500);
+        })();
+    </script>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -1803,34 +1858,75 @@ ul {
         function initializeQuotesAndInvoices() {
             console.log('Initializing quotes, invoices and revenue directly');
             
-            // Zorg ervoor dat quotes altijd in localStorage staan
-            try {
-                const quotes = JSON.parse(localStorage.getItem('quotes') || '[]');
-                localStorage.setItem('quotes', JSON.stringify(quotes));
-                console.log('Quotes in localStorage:', quotes.length);
-            } catch (e) {
-                console.error('Error initializing quotes:', e);
-                localStorage.setItem('quotes', '[]');
-            }
-            
-            // Zorg ervoor dat invoices altijd in localStorage staan
-            try {
-                const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
-                localStorage.setItem('invoices', JSON.stringify(invoices));
-                console.log('Invoices in localStorage:', invoices.length);
-            } catch (e) {
-                console.error('Error initializing invoices:', e);
-                localStorage.setItem('invoices', '[]');
-            }
-            
-            // Zorg ervoor dat revenue altijd in localStorage staat
-            try {
-                const revenue = JSON.parse(localStorage.getItem('revenue') || '[]');
-                localStorage.setItem('revenue', JSON.stringify(revenue));
-                console.log('Revenue in localStorage:', revenue.length);
-            } catch (e) {
-                console.error('Error initializing revenue:', e);
-                localStorage.setItem('revenue', '[]');
+            // Controleer of userStorage beschikbaar is
+            if (typeof userStorage === 'undefined') {
+                console.error('userStorage is not defined, falling back to localStorage');
+                
+                // Zorg ervoor dat quotes altijd in localStorage staan
+                try {
+                    const quotes = JSON.parse(localStorage.getItem('quotes') || '[]');
+                    localStorage.setItem('quotes', JSON.stringify(quotes));
+                    console.log('Quotes in localStorage:', quotes.length);
+                } catch (e) {
+                    console.error('Error initializing quotes:', e);
+                    localStorage.setItem('quotes', '[]');
+                }
+                
+                // Zorg ervoor dat invoices altijd in localStorage staan
+                try {
+                    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+                    localStorage.setItem('invoices', JSON.stringify(invoices));
+                    console.log('Invoices in localStorage:', invoices.length);
+                } catch (e) {
+                    console.error('Error initializing invoices:', e);
+                    localStorage.setItem('invoices', '[]');
+                }
+                
+                // Zorg ervoor dat revenue altijd in localStorage staat
+                try {
+                    const revenue = JSON.parse(localStorage.getItem('revenue') || '[]');
+                    localStorage.setItem('revenue', JSON.stringify(revenue));
+                    console.log('Revenue in localStorage:', revenue.length);
+                } catch (e) {
+                    console.error('Error initializing revenue:', e);
+                    localStorage.setItem('revenue', '[]');
+                }
+            } else {
+                // Gebruik userStorage voor gebruikersspecifieke opslag
+                console.log('Using userStorage for user-specific storage');
+                
+                // Migreer bestaande data naar gebruikersspecifieke opslag
+                userStorage.migrateData(['quotes', 'invoices', 'revenue', 'clients', 'projects', 'timeEntries']);
+                
+                // Zorg ervoor dat quotes altijd in userStorage staan
+                try {
+                    const quotes = userStorage.getJSON('quotes', []);
+                    userStorage.setJSON('quotes', quotes);
+                    console.log('Quotes in userStorage:', quotes.length);
+                } catch (e) {
+                    console.error('Error initializing quotes in userStorage:', e);
+                    userStorage.setJSON('quotes', []);
+                }
+                
+                // Zorg ervoor dat invoices altijd in userStorage staan
+                try {
+                    const invoices = userStorage.getJSON('invoices', []);
+                    userStorage.setJSON('invoices', invoices);
+                    console.log('Invoices in userStorage:', invoices.length);
+                } catch (e) {
+                    console.error('Error initializing invoices in userStorage:', e);
+                    userStorage.setJSON('invoices', []);
+                }
+                
+                // Zorg ervoor dat revenue altijd in userStorage staat
+                try {
+                    const revenue = userStorage.getJSON('revenue', []);
+                    userStorage.setJSON('revenue', revenue);
+                    console.log('Revenue in userStorage:', revenue.length);
+                } catch (e) {
+                    console.error('Error initializing revenue in userStorage:', e);
+                    userStorage.setJSON('revenue', []);
+                }
             }
             
             // Zorg ervoor dat de revenue manager wordt geïnitialiseerd
@@ -1860,39 +1956,82 @@ ul {
                 }
                 
                 try {
-                    // Clients synchroniseren
-                    const clients = JSON.parse(localStorage.getItem('clients') || '[]');
-                    if (Array.isArray(clients)) {
-                        window.app.state.clients = clients;
-                        console.log('Clients gesynchroniseerd:', clients.length);
-                    }
-                    
-                    // Projects synchroniseren
-                    const projects = JSON.parse(localStorage.getItem('projects') || '[]');
-                    if (Array.isArray(projects)) {
-                        window.app.state.projects = projects;
-                        console.log('Projects gesynchroniseerd:', projects.length);
-                    }
-                    
-                    // Time entries synchroniseren
-                    const timeEntries = JSON.parse(localStorage.getItem('timeEntries') || '[]');
-                    if (Array.isArray(timeEntries)) {
-                        window.app.state.timeEntries = timeEntries;
-                        console.log('Time entries gesynchroniseerd:', timeEntries.length);
-                    }
-                    
-                    // Quotes synchroniseren
-                    const quotes = JSON.parse(localStorage.getItem('quotes') || '[]');
-                    if (Array.isArray(quotes)) {
-                        window.app.state.quotes = quotes;
-                        console.log('Quotes gesynchroniseerd:', quotes.length);
-                    }
-                    
-                    // Invoices synchroniseren
-                    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
-                    if (Array.isArray(invoices)) {
-                        window.app.state.invoices = invoices;
-                        console.log('Invoices gesynchroniseerd:', invoices.length);
+                    // Controleer of userStorage beschikbaar is
+                    if (typeof userStorage === 'undefined') {
+                        console.error('userStorage is not defined, falling back to localStorage');
+                        
+                        // Clients synchroniseren vanuit localStorage
+                        const clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                        if (Array.isArray(clients)) {
+                            window.app.state.clients = clients;
+                            console.log('Clients gesynchroniseerd uit localStorage:', clients.length);
+                        }
+                        
+                        // Projects synchroniseren vanuit localStorage
+                        const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+                        if (Array.isArray(projects)) {
+                            window.app.state.projects = projects;
+                            console.log('Projects gesynchroniseerd uit localStorage:', projects.length);
+                        }
+                        
+                        // Time entries synchroniseren vanuit localStorage
+                        const timeEntries = JSON.parse(localStorage.getItem('timeEntries') || '[]');
+                        if (Array.isArray(timeEntries)) {
+                            window.app.state.timeEntries = timeEntries;
+                            console.log('Time entries gesynchroniseerd uit localStorage:', timeEntries.length);
+                        }
+                        
+                        // Quotes synchroniseren vanuit localStorage
+                        const quotes = JSON.parse(localStorage.getItem('quotes') || '[]');
+                        if (Array.isArray(quotes)) {
+                            window.app.state.quotes = quotes;
+                            console.log('Quotes gesynchroniseerd uit localStorage:', quotes.length);
+                        }
+                        
+                        // Invoices synchroniseren vanuit localStorage
+                        const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+                        if (Array.isArray(invoices)) {
+                            window.app.state.invoices = invoices;
+                            console.log('Invoices gesynchroniseerd uit localStorage:', invoices.length);
+                        }
+                    } else {
+                        // Gebruik userStorage voor gebruikersspecifieke opslag
+                        console.log('Using userStorage for user-specific data synchronization');
+                        
+                        // Clients synchroniseren vanuit userStorage
+                        const clients = userStorage.getJSON('clients', []);
+                        if (Array.isArray(clients)) {
+                            window.app.state.clients = clients;
+                            console.log('Clients gesynchroniseerd uit userStorage:', clients.length);
+                        }
+                        
+                        // Projects synchroniseren vanuit userStorage
+                        const projects = userStorage.getJSON('projects', []);
+                        if (Array.isArray(projects)) {
+                            window.app.state.projects = projects;
+                            console.log('Projects gesynchroniseerd uit userStorage:', projects.length);
+                        }
+                        
+                        // Time entries synchroniseren vanuit userStorage
+                        const timeEntries = userStorage.getJSON('timeEntries', []);
+                        if (Array.isArray(timeEntries)) {
+                            window.app.state.timeEntries = timeEntries;
+                            console.log('Time entries gesynchroniseerd uit userStorage:', timeEntries.length);
+                        }
+                        
+                        // Quotes synchroniseren vanuit userStorage
+                        const quotes = userStorage.getJSON('quotes', []);
+                        if (Array.isArray(quotes)) {
+                            window.app.state.quotes = quotes;
+                            console.log('Quotes gesynchroniseerd uit userStorage:', quotes.length);
+                        }
+                        
+                        // Invoices synchroniseren vanuit userStorage
+                        const invoices = userStorage.getJSON('invoices', []);
+                        if (Array.isArray(invoices)) {
+                            window.app.state.invoices = invoices;
+                            console.log('Invoices gesynchroniseerd uit userStorage:', invoices.length);
+                        }
                     }
                 } catch (e) {
                     console.error('Error bij synchroniseren:', e);
@@ -1904,6 +2043,52 @@ ul {
             
             // Elke 2 seconden synchroniseren
             setInterval(syncData, 2000);
+            
+            // Voeg een functie toe om gegevens op te slaan in userStorage
+            window.saveAppData = function() {
+                if (!window.app || !window.app.state) {
+                    console.error('App state niet beschikbaar voor opslaan');
+                    return;
+                }
+                
+                try {
+                    // Controleer of userStorage beschikbaar is
+                    if (typeof userStorage !== 'undefined') {
+                        // Sla alle app state gegevens op in userStorage
+                        if (Array.isArray(window.app.state.clients)) {
+                            userStorage.setJSON('clients', window.app.state.clients);
+                            console.log('Clients opgeslagen in userStorage:', window.app.state.clients.length);
+                        }
+                        
+                        if (Array.isArray(window.app.state.projects)) {
+                            userStorage.setJSON('projects', window.app.state.projects);
+                            console.log('Projects opgeslagen in userStorage:', window.app.state.projects.length);
+                        }
+                        
+                        if (Array.isArray(window.app.state.timeEntries)) {
+                            userStorage.setJSON('timeEntries', window.app.state.timeEntries);
+                            console.log('Time entries opgeslagen in userStorage:', window.app.state.timeEntries.length);
+                        }
+                        
+                        if (Array.isArray(window.app.state.quotes)) {
+                            userStorage.setJSON('quotes', window.app.state.quotes);
+                            console.log('Quotes opgeslagen in userStorage:', window.app.state.quotes.length);
+                        }
+                        
+                        if (Array.isArray(window.app.state.invoices)) {
+                            userStorage.setJSON('invoices', window.app.state.invoices);
+                            console.log('Invoices opgeslagen in userStorage:', window.app.state.invoices.length);
+                        }
+                    } else {
+                        console.error('userStorage is niet beschikbaar, kan gegevens niet opslaan');
+                    }
+                } catch (e) {
+                    console.error('Error bij opslaan van app data:', e);
+                }
+            };
+            
+            // Sla gegevens op wanneer de pagina wordt verlaten
+            window.addEventListener('beforeunload', window.saveAppData);
             
             // Bij klikken op tabbladen synchroniseren
             document.querySelectorAll('.nav-link').forEach(function(link) {
@@ -2003,31 +2188,48 @@ ul {
                         var emailInput = document.getElementById('client-email');
                         var phoneInput = document.getElementById('client-phone');
                         var addressInput = document.getElementById('client-address');
+                        var notesInput = document.getElementById('client-notes');
                         
                         if (!nameInput) {
                             console.error('Client name input niet gevonden');
                             return false;
                         }
                         
-                        var clientName = nameInput.value;
-                        var clientContact = contactInput ? contactInput.value : '';
-                        var clientEmail = emailInput ? emailInput.value : '';
-                        var clientPhone = phoneInput ? phoneInput.value : '';
-                        var clientAddress = addressInput ? addressInput.value : '';
-                        
-                        // Valideer (voorkom lege klanten)
-                        if (!clientName || clientName.trim() === '') {
-                            alert('Please enter a client name');
+                        // Valideer naam (verplicht)
+                        if (!nameInput.value.trim()) {
+                            showNotification('Please enter a client name', 'error');
                             return false;
                         }
                         
-                        // Haal clients op uit localStorage
+                        // Maak client object
+                        var client = {
+                            id: clientFormElement.getAttribute('data-editing-id') || generateId(),
+                            name: nameInput.value.trim(),
+                            contact: contactInput ? contactInput.value.trim() : '',
+                            email: emailInput ? emailInput.value.trim() : '',
+                            phone: phoneInput ? phoneInput.value.trim() : '',
+                            address: addressInput ? addressInput.value.trim() : '',
+                            notes: notesInput ? notesInput.value.trim() : '',
+                            timestamp: Date.now()
+                        };
+                        
+                        console.log('Client object created:', client);
+                        
+                        // Haal bestaande clients op uit userStorage of localStorage
                         var clients = [];
                         try {
-                            clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                            if (typeof userStorage !== 'undefined') {
+                                // Gebruik userStorage voor gebruikersspecifieke opslag
+                                clients = userStorage.getJSON('clients', []);
+                                console.log('Clients geladen uit userStorage:', clients.length);
+                            } else {
+                                // Fallback naar localStorage
+                                clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                                console.log('Clients geladen uit localStorage:', clients.length);
+                            }
                             if (!Array.isArray(clients)) clients = [];
                         } catch (e) {
-                            console.error('Error parsing clients from localStorage:', e);
+                            console.error('Error bij laden van clients:', e);
                             clients = [];
                         }
                         
@@ -2039,67 +2241,6 @@ ul {
                             // Update bestaande client
                             var clientUpdated = false;
                             
-                            for (var i = 0; i < clients.length; i++) {
-                                if (clients[i].id === editingClientId) {
-                                    clients[i].name = clientName;
-                                    clients[i].contact = clientContact;
-                                    clients[i].email = clientEmail;
-                                    clients[i].phone = clientPhone;
-                                    clients[i].address = clientAddress;
-                                    clientUpdated = true;
-                                    break;
-                                }
-                            }
-                            
-                            if (!clientUpdated) {
-                                // Client niet gevonden, maak nieuwe aan
-                                var newClient = {
-                                    id: 'client_' + Date.now(),
-                                    name: clientName,
-                                    contact: clientContact,
-                                    email: clientEmail,
-                                    phone: clientPhone,
-                                    address: clientAddress,
-                                    dateAdded: new Date().toISOString()
-                                };
-                                
-                                clients.push(newClient);
-                                message = 'Client added successfully!';
-                            } else {
-                                message = 'Client updated successfully!';
-                            }
-                            
-                            // Reset editing mode
-                            clientFormElement.removeAttribute('data-editing-id');
-                            var formTitle = document.querySelector('.card-title');
-                            if (formTitle) formTitle.textContent = 'Add Client';
-                        } else {
-                            // Maak nieuwe client
-                            var newClient = {
-                                id: 'client_' + Date.now(),
-                                name: clientName,
-                                contact: clientContact,
-                                email: clientEmail,
-                                phone: clientPhone,
-                                address: clientAddress,
-                                dateAdded: new Date().toISOString()
-                            };
-                            
-                            clients.push(newClient);
-                            message = 'Client added successfully!';
-                        }
-                        
-                        // Sla op in localStorage
-                        try {
-                            localStorage.setItem('clients', JSON.stringify(clients));
-                        } catch (e) {
-                            console.error('Error saving clients to localStorage:', e);
-                            alert('Error saving client. Please try again.');
-                            return false;
-                        }
-                        
-                        // Update app state als die bestaat
-                        if (window.app && app.state) {
                             app.state.clients = clients;
                             console.log('App state clients bijgewerkt:', app.state.clients);
                         } else {
@@ -2150,91 +2291,102 @@ ul {
                 function updateClientsTable() {
                     if (!clientsTable) return;
                     
-                    var tableBody = clientsTable.querySelector('tbody');
-                    if (!tableBody) return;
-                    
-                    // Haal clients op uit localStorage
-                    var clients = [];
                     try {
-                        clients = JSON.parse(localStorage.getItem('clients') || '[]');
-                        if (!Array.isArray(clients)) clients = [];
-                    } catch (e) {
-                        console.error('Error parsing clients from localStorage:', e);
-                        clients = [];
-                    }
-                    
-                    // Leeg de tabel
-                    tableBody.innerHTML = '';
-                    
-                    // Als er geen clients zijn
-                    if (clients.length === 0) {
-                        var emptyRow = document.createElement('tr');
-                        emptyRow.innerHTML = '<td colspan="5" class="text-center">No clients added yet</td>';
-                        tableBody.appendChild(emptyRow);
-                        return;
-                    }
-                    
-                    // Voeg elke client toe aan de tabel
-                    clients.forEach(function(client) {
-                        if (!client || !client.id || !client.name) return; // Skip ongeldige clients
+                        // Haal clients op uit userStorage als beschikbaar, anders uit localStorage
+                        let clients = [];
+                        if (typeof userStorage !== 'undefined') {
+                            clients = userStorage.getJSON('clients', []);
+                            console.log('Clients geladen uit userStorage voor tabel:', clients.length);
+                        } else {
+                            clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                            console.log('Clients geladen uit localStorage voor tabel:', clients.length);
+                        }
                         
-                        var row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${client.name || '-'}</td>
-                            <td>${client.contact || '-'}</td>
-                            <td>${client.email || '-'}</td>
-                            <td>${client.phone || '-'}</td>
-                            <td>
-                                <button class="btn-icon edit-client" data-id="${client.id}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-icon delete-client" data-id="${client.id}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
+                        // Maak tabel leeg
+                        clientsTable.innerHTML = '';
+                        
+                        // Voeg header toe
+                        const headerRow = document.createElement('tr');
+                        headerRow.innerHTML = `
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Actions</th>
                         `;
-                        tableBody.appendChild(row);
-                    });
-                    
-                    // Voeg event listeners toe aan edit knoppen
-                    var editButtons = document.querySelectorAll('.edit-client');
-                    for (var i = 0; i < editButtons.length; i++) {
-                        editButtons[i].onclick = function() {
-                            var clientId = this.getAttribute('data-id');
-                            console.log('Edit client:', clientId);
+                        clientsTable.appendChild(headerRow);
+                        
+                        // Als er geen clients zijn
+                        if (clients.length === 0) {
+                            var emptyRow = document.createElement('tr');
+                            emptyRow.innerHTML = '<td colspan="5" class="text-center">No clients added yet</td>';
+                            clientsTable.appendChild(emptyRow);
+                            return;
+                        }
+                        
+                        // Voeg elke client toe aan de tabel
+                        clients.forEach(function(client) {
+                            if (!client || !client.id || !client.name) return; // Skip ongeldige clients
                             
-                            if (!clientId) return;
-                            
-                            // Haal clients op uit localStorage
-                            var clients = [];
-                            try {
-                                clients = JSON.parse(localStorage.getItem('clients') || '[]');
-                                if (!Array.isArray(clients)) clients = [];
-                            } catch (e) {
-                                console.error('Error parsing clients from localStorage:', e);
-                                return;
-                            }
-                            
-                            // Zoek client
-                            var clientToEdit = null;
-                            for (var j = 0; j < clients.length; j++) {
-                                if (clients[j].id === clientId) {
-                                    clientToEdit = clients[j];
-                                    break;
+                            var row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${client.name || '-'}</td>
+                                <td>${client.contact || '-'}</td>
+                                <td>${client.email || '-'}</td>
+                                <td>${client.phone || '-'}</td>
+                                <td>
+                                    <button class="btn-icon edit-client" data-id="${client.id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-icon delete-client" data-id="${client.id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                            clientsTable.appendChild(row);
+                        });
+                        
+                        // Voeg event listeners toe aan edit knoppen
+                        var editButtons = document.querySelectorAll('.edit-client');
+                        for (var i = 0; i < editButtons.length; i++) {
+                            editButtons[i].onclick = function() {
+                                var clientId = this.getAttribute('data-id');
+                                console.log('Edit client:', clientId);
+                                
+                                if (!clientId) return;
+                                
+                                // Haal clients op uit userStorage als beschikbaar, anders uit localStorage
+                                let clients = [];
+                                try {
+                                    if (typeof userStorage !== 'undefined') {
+                                        clients = userStorage.getJSON('clients', []);
+                                    } else {
+                                        clients = JSON.parse(localStorage.getItem('clients') || '[]');
+                                    }
+                                    
+                                    // Zoek client
+                                    var clientToEdit = null;
+                                    for (var j = 0; j < clients.length; j++) {
+                                        if (clients[j].id === clientId) {
+                                            clientToEdit = clients[j];
+                                            break;
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.error('Error bij ophalen van clients:', e);
                                 }
-                            }
                             
-                            if (!clientToEdit) {
-                                console.error('Client niet gevonden:', clientId);
-                                return;
-                            }
+                                if (!clientToEdit) {
+                                    console.error('Client niet gevonden:', clientId);
+                                    return;
+                                }
                             
-                            // Vul formulier
-                            var nameInput = document.getElementById('client-name');
-                            var contactInput = document.getElementById('client-contact');
-                            var emailInput = document.getElementById('client-email');
-                            var phoneInput = document.getElementById('client-phone');
-                            var addressInput = document.getElementById('client-address');
+                                // Vul formulier
+                                var nameInput = document.getElementById('client-name');
+                                var contactInput = document.getElementById('client-contact');
+                                var emailInput = document.getElementById('client-email');
+                                var phoneInput = document.getElementById('client-phone');
+                                var addressInput = document.getElementById('client-address');
                             
                             if (nameInput) nameInput.value = clientToEdit.name || '';
                             if (contactInput) contactInput.value = clientToEdit.contact || '';
