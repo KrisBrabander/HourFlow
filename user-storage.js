@@ -5,6 +5,24 @@
  * This ensures each user has their own isolated data storage
  */
 const userStorage = {
+    // Debug mode - set to true to see detailed logs
+    debug: true,
+    
+    /**
+     * Log a debug message if debug mode is enabled
+     * @param {string} message - The message to log
+     * @param {*} data - Optional data to log
+     */
+    log: function(message, data) {
+        if (this.debug) {
+            if (data !== undefined) {
+                console.log(`[UserStorage] ${message}`, data);
+            } else {
+                console.log(`[UserStorage] ${message}`);
+            }
+        }
+    },
+    
     /**
      * Get the current user ID from localStorage
      * @returns {string} The user ID or an empty string if no user is logged in
@@ -12,7 +30,13 @@ const userStorage = {
     getCurrentUserId: function() {
         try {
             const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            return currentUser.uid || '';
+            if (currentUser && currentUser.uid) {
+                this.log('Current user ID found:', currentUser.uid);
+                return currentUser.uid;
+            } else {
+                this.log('No user ID found in localStorage');
+                return '';
+            }
         } catch (e) {
             console.error('Error retrieving current user:', e);
             return '';
@@ -27,10 +51,12 @@ const userStorage = {
     getUserKey: function(key) {
         const userId = this.getCurrentUserId();
         if (!userId) {
-            console.warn('No user ID found, user-specific storage not possible');
+            this.log('No user ID found, using global key:', key);
             return key;
         }
-        return `user_${userId}_${key}`;
+        const userKey = `user_${userId}_${key}`;
+        this.log('Created user-specific key:', userKey);
+        return userKey;
     },
     
     /**
@@ -43,7 +69,13 @@ const userStorage = {
         const userKey = this.getUserKey(key);
         try {
             const value = localStorage.getItem(userKey);
-            return value !== null ? value : defaultValue;
+            if (value !== null) {
+                this.log(`Retrieved item for key ${key}:`, { userKey, found: true });
+                return value;
+            } else {
+                this.log(`No item found for key ${key}, using default value:`, { userKey, defaultValue });
+                return defaultValue;
+            }
         } catch (e) {
             console.error(`Error retrieving ${key} from localStorage:`, e);
             return defaultValue;
@@ -60,6 +92,7 @@ const userStorage = {
         const userKey = this.getUserKey(key);
         try {
             localStorage.setItem(userKey, value);
+            this.log(`Stored item for key ${key}:`, { userKey, valueLength: String(value).length });
             return true;
         } catch (e) {
             console.error(`Error storing ${key} in localStorage:`, e);
@@ -76,6 +109,7 @@ const userStorage = {
         const userKey = this.getUserKey(key);
         try {
             localStorage.removeItem(userKey);
+            this.log(`Removed item for key ${key}:`, { userKey });
             return true;
         } catch (e) {
             console.error(`Error removing ${key} from localStorage:`, e);
@@ -92,7 +126,14 @@ const userStorage = {
     getJSON: function(key, defaultValue = null) {
         try {
             const value = this.getItem(key);
-            return value !== null ? JSON.parse(value) : defaultValue;
+            if (value !== null) {
+                const parsedValue = JSON.parse(value);
+                this.log(`Retrieved and parsed JSON for key ${key}:`, { itemCount: Array.isArray(parsedValue) ? parsedValue.length : 'object' });
+                return parsedValue;
+            } else {
+                this.log(`No JSON found for key ${key}, using default value:`, { defaultValue });
+                return defaultValue;
+            }
         } catch (e) {
             console.error(`Error parsing JSON for ${key}:`, e);
             return defaultValue;
@@ -108,7 +149,9 @@ const userStorage = {
     setJSON: function(key, value) {
         try {
             const jsonValue = JSON.stringify(value);
-            return this.setItem(key, jsonValue);
+            const result = this.setItem(key, jsonValue);
+            this.log(`Stored JSON for key ${key}:`, { itemCount: Array.isArray(value) ? value.length : 'object', success: result });
+            return result;
         } catch (e) {
             console.error(`Error converting to JSON for ${key}:`, e);
             return false;
@@ -122,18 +165,18 @@ const userStorage = {
     migrateData: function(keys) {
         const userId = this.getCurrentUserId();
         if (!userId) {
-            console.warn('No user ID found, migration not possible');
+            this.log('No user ID found, migration not possible');
             return;
         }
         
-        console.log(`Migrating data to user ${userId}...`);
+        this.log(`Migrating data to user ${userId}...`, { keys });
         
         keys.forEach(key => {
             try {
                 // Check if user-specific data already exists
                 const userKey = this.getUserKey(key);
                 if (localStorage.getItem(userKey) !== null) {
-                    console.log(`User-specific data for ${key} already exists, no migration needed`);
+                    this.log(`User-specific data for ${key} already exists, no migration needed`);
                     return;
                 }
                 
@@ -142,7 +185,9 @@ const userStorage = {
                 if (value !== null) {
                     // Store the data under the user-specific key
                     localStorage.setItem(userKey, value);
-                    console.log(`Data for ${key} migrated to user-specific storage`);
+                    this.log(`Data for ${key} migrated to user-specific storage`, { dataLength: value.length });
+                } else {
+                    this.log(`No data found for ${key}, nothing to migrate`);
                 }
             } catch (e) {
                 console.error(`Error migrating ${key}:`, e);
