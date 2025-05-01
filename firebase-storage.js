@@ -1,16 +1,16 @@
 /**
- * firebase-storage.js
+ * firebase-storage.js - EENVOUDIGE VERSIE
  * Zorgt voor gebruikersspecifieke gegevensopslag in Firebase Cloud Firestore
  * Synchroniseert gegevens tussen verschillende apparaten en browsers
  */
 
-// Firebase Storage Manager
+// Firebase Storage Manager - Eenvoudige Versie
 const firebaseStorage = {
     // Debug mode
     debug: true,
     
-    // Firebase app en Firestore referenties
-    app: null,
+    // Firebase modules
+    firebase: null,
     db: null,
     auth: null,
     
@@ -39,12 +39,14 @@ const firebaseStorage = {
         }
         
         try {
-            // Importeer Firebase modules
-            const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
-            const { getFirestore, collection, doc, setDoc, getDoc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-            const { getAuth } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+            this.log('Initializing Firebase Storage...');
             
-            // Firebase configuratie (gebruik dezelfde als in login.html)
+            // Importeer Firebase modules
+            const firebase = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+            const firestore = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            const auth = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+            
+            // Firebase configuratie
             const firebaseConfig = {
                 apiKey: "AIzaSyBrMzcoCMN9tXROYdJCMq9iT9NX5IW_fqE",
                 authDomain: "hourflow-54a34.firebaseapp.com",
@@ -56,17 +58,15 @@ const firebaseStorage = {
             };
             
             // Initialiseer Firebase
-            this.app = initializeApp(firebaseConfig, "firebaseStorage");
-            this.db = getFirestore(this.app);
-            this.auth = getAuth(this.app);
+            const app = firebase.initializeApp(firebaseConfig, "firebaseStorage");
+            this.db = firestore.getFirestore(app);
+            this.auth = auth.getAuth(app);
             
-            // Bewaar Firebase modules voor later gebruik
-            this.firestore = {
-                collection,
-                doc,
-                setDoc,
-                getDoc,
-                deleteDoc
+            // Bewaar Firebase modules
+            this.firebase = {
+                app: firebase,
+                firestore: firestore,
+                auth: auth
             };
             
             // Haal huidige gebruiker op
@@ -93,247 +93,145 @@ const firebaseStorage = {
         }
     },
     
-    // Haal de huidige gebruikers-ID op
-    getCurrentUserId: function() {
-        if (!this.initialized) {
-            this.init();
-        }
-        return this.userId;
-    },
-    
-    // Haal een item op uit Firebase
-    getItem: async function(key, defaultValue = null) {
+    // Sla een JSON-item op in Firebase
+    saveData: async function(key, data) {
         if (!this.initialized) {
             await this.init();
         }
         
         if (!this.userId) {
-            this.log('No user logged in, cannot get item from Firebase');
-            return defaultValue;
-        }
-        
-        try {
-            const docRef = this.firestore.doc(this.db, `users/${this.userId}/data/${key}`);
-            const docSnap = await this.firestore.getDoc(docRef);
-            
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                this.log(`Item retrieved from Firebase: ${key}`, data);
-                return data.value;
-            }
-            
-            this.log(`No item found in Firebase: ${key}, using default value`);
-            return defaultValue;
-        } catch (e) {
-            console.error(`[FirebaseStorage] Error retrieving ${key} from Firebase:`, e);
-            return defaultValue;
-        }
-    },
-    
-    // Sla een item op in Firebase
-    setItem: async function(key, value) {
-        if (!this.initialized) {
-            await this.init();
-        }
-        
-        if (!this.userId) {
-            this.log('No user logged in, cannot save item to Firebase');
+            this.log('No user logged in, cannot save data to Firebase');
             return false;
         }
         
         try {
-            const docRef = this.firestore.doc(this.db, `users/${this.userId}/data/${key}`);
-            await this.firestore.setDoc(docRef, {
-                value: value,
+            this.log(`Saving data to Firebase: ${key}`);
+            
+            // Maak een document reference
+            const docRef = this.firebase.firestore.doc(this.db, `users/${this.userId}/data/${key}`);
+            
+            // Sla de data op
+            await this.firebase.firestore.setDoc(docRef, {
+                value: data,
                 updatedAt: new Date().toISOString()
             });
             
-            this.log(`Item stored in Firebase: ${key}`);
+            this.log(`Data saved to Firebase: ${key}`);
             return true;
         } catch (e) {
-            console.error(`[FirebaseStorage] Error storing ${key} in Firebase:`, e);
-            return false;
-        }
-    },
-    
-    // Verwijder een item uit Firebase
-    removeItem: async function(key) {
-        if (!this.initialized) {
-            await this.init();
-        }
-        
-        if (!this.userId) {
-            this.log('No user logged in, cannot remove item from Firebase');
-            return false;
-        }
-        
-        try {
-            const docRef = this.firestore.doc(this.db, `users/${this.userId}/data/${key}`);
-            await this.firestore.deleteDoc(docRef);
-            
-            this.log(`Item removed from Firebase: ${key}`);
-            return true;
-        } catch (e) {
-            console.error(`[FirebaseStorage] Error removing ${key} from Firebase:`, e);
+            console.error(`[FirebaseStorage] Error saving data to Firebase: ${key}`, e);
             return false;
         }
     },
     
     // Haal een JSON-item op uit Firebase
-    getJSON: async function(key, defaultValue = null) {
+    loadData: async function(key, defaultValue = null) {
+        if (!this.initialized) {
+            await this.init();
+        }
+        
+        if (!this.userId) {
+            this.log('No user logged in, cannot load data from Firebase');
+            return defaultValue;
+        }
+        
         try {
-            const value = await this.getItem(key);
-            if (value === null) {
-                return defaultValue;
+            this.log(`Loading data from Firebase: ${key}`);
+            
+            // Maak een document reference
+            const docRef = this.firebase.firestore.doc(this.db, `users/${this.userId}/data/${key}`);
+            
+            // Haal de data op
+            const docSnap = await this.firebase.firestore.getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                this.log(`Data loaded from Firebase: ${key}`, data.value);
+                return data.value;
             }
             
-            this.log(`JSON retrieved from Firebase: ${key}`);
-            return value;
+            this.log(`No data found in Firebase: ${key}, using default value`);
+            return defaultValue;
         } catch (e) {
-            console.error(`[FirebaseStorage] Error parsing JSON for ${key}:`, e);
+            console.error(`[FirebaseStorage] Error loading data from Firebase: ${key}`, e);
             return defaultValue;
         }
     },
     
-    // Sla een JSON-item op in Firebase
-    setJSON: async function(key, value) {
-        try {
-            const result = await this.setItem(key, value);
-            this.log(`JSON stored in Firebase: ${key}`);
-            return result;
-        } catch (e) {
-            console.error(`[FirebaseStorage] Error storing JSON for ${key}:`, e);
+    // Synchroniseer data tussen localStorage en Firebase
+    sync: async function(keys) {
+        if (!this.initialized) {
+            if (!await this.init()) {
+                this.log('Could not initialize Firebase Storage, sync not possible');
+                return false;
+            }
+        }
+        
+        if (!this.userId) {
+            this.log('No user logged in, sync not possible');
             return false;
         }
-    },
-    
-    // Migreer gegevens van localStorage naar Firebase
-    migrateFromLocalStorage: async function(keys) {
-        if (!this.initialized) {
-            if (!await this.init()) {
-                console.warn('[FirebaseStorage] No user logged in, migration not possible');
-                return false;
-            }
-        }
         
-        console.log(`[FirebaseStorage] Migrating data from localStorage to Firebase for user ${this.userId}...`);
-        let migrated = 0;
-        
-        // Gebruikersprefix voor localStorage
-        const userPrefix = `user_${this.userId}_`;
-        
-        for (const key of keys) {
-            try {
-                // Haal gegevens op uit localStorage (met gebruikersprefix)
-                const value = localStorage.getItem(userPrefix + key);
-                if (value !== null) {
-                    try {
-                        // Parse JSON als het JSON is
-                        const parsedValue = JSON.parse(value);
-                        await this.setJSON(key, parsedValue);
-                    } catch (e) {
-                        // Als het geen JSON is, sla het op als string
-                        await this.setItem(key, value);
-                    }
-                    this.log(`Data for ${key} migrated from localStorage to Firebase`);
-                    migrated++;
-                } else {
-                    this.log(`No data found for ${key} in localStorage, nothing to migrate`);
-                }
-            } catch (e) {
-                console.error(`[FirebaseStorage] Error migrating ${key} from localStorage:`, e);
-            }
-        }
-        
-        console.log(`[FirebaseStorage] Migration completed: ${migrated} items migrated to Firebase`);
-        return true;
-    },
-    
-    // Synchroniseer gegevens tussen localStorage en Firebase
-    syncWithLocalStorage: async function(keys) {
-        if (!this.initialized) {
-            if (!await this.init()) {
-                console.warn('[FirebaseStorage] No user logged in, sync not possible');
-                return false;
-            }
-        }
-        
-        console.log(`[FirebaseStorage] Syncing data between localStorage and Firebase for user ${this.userId}...`);
-        
-        // Gebruikersprefix voor localStorage
-        const userPrefix = `user_${this.userId}_`;
+        this.log(`Syncing data for user: ${this.userId}`);
         let syncedItems = 0;
         
-        // VERBETERD SYNCHRONISATIE ALGORITME
+        // Gebruikersprefix voor localStorage
+        const userPrefix = `user_${this.userId}_`;
+        
+        // Synchroniseer elke key
         for (const key of keys) {
             try {
-                // Haal gegevens op uit Firebase
-                const firebaseValue = await this.getItem(key);
-                // Haal gegevens op uit localStorage
-                let localValue = null;
-                try {
-                    localValue = localStorage.getItem(userPrefix + key);
-                } catch (e) {
-                    console.warn(`[FirebaseStorage] Could not read localStorage for ${key}:`, e);
+                // Haal data op uit Firebase
+                const firebaseData = await this.loadData(key);
+                
+                // Haal data op uit localStorage
+                let localData = null;
+                const localValue = localStorage.getItem(userPrefix + key);
+                if (localValue) {
+                    try {
+                        localData = JSON.parse(localValue);
+                    } catch (e) {
+                        localData = localValue;
+                    }
                 }
                 
-                // STRATEGIE 1: Firebase heeft data, localStorage niet of is leeg
-                if (firebaseValue !== null && (localValue === null || localValue === '[]' || localValue === '{}')) {
+                // STRATEGIE: Firebase heeft data, localStorage niet
+                if (firebaseData && !localData) {
                     try {
-                        if (typeof firebaseValue === 'object') {
-                            localStorage.setItem(userPrefix + key, JSON.stringify(firebaseValue));
-                        } else {
-                            localStorage.setItem(userPrefix + key, firebaseValue);
-                        }
-                        this.log(`SYNC: Firebase → Local for ${key} (Firebase had data, local empty)`);
+                        localStorage.setItem(userPrefix + key, JSON.stringify(firebaseData));
+                        this.log(`Sync: Firebase → Local for ${key}`);
                         syncedItems++;
                     } catch (e) {
-                        console.error(`[FirebaseStorage] Error updating localStorage from Firebase for ${key}:`, e);
+                        console.error(`Error syncing Firebase → Local for ${key}:`, e);
                     }
                 }
-                // STRATEGIE 2: localStorage heeft data, Firebase niet
-                else if (localValue !== null && localValue !== '[]' && localValue !== '{}' && firebaseValue === null) {
+                // STRATEGIE: localStorage heeft data, Firebase niet
+                else if (!firebaseData && localData) {
                     try {
-                        // Parse JSON als het JSON is
-                        try {
-                            const parsedValue = JSON.parse(localValue);
-                            await this.setJSON(key, parsedValue);
-                        } catch (e) {
-                            // Als het geen JSON is, sla het op als string
-                            await this.setItem(key, localValue);
-                        }
-                        this.log(`SYNC: Local → Firebase for ${key} (Local had data, Firebase empty)`);
+                        await this.saveData(key, localData);
+                        this.log(`Sync: Local → Firebase for ${key}`);
                         syncedItems++;
                     } catch (e) {
-                        console.error(`[FirebaseStorage] Error updating Firebase from localStorage for ${key}:`, e);
+                        console.error(`Error syncing Local → Firebase for ${key}:`, e);
                     }
                 }
-                // STRATEGIE 3: Beide hebben data, vergelijk timestamps of gebruik nieuwste
-                else if (localValue !== null && firebaseValue !== null) {
+                // STRATEGIE: Beide hebben data, gebruik nieuwste
+                else if (firebaseData && localData) {
+                    // Voor nu gebruiken we Firebase als bron van waarheid
                     try {
-                        // Probeer timestamps te vergelijken als die beschikbaar zijn
-                        let useFirebase = true; // Standaard Firebase gebruiken als nieuwer
-                        
-                        // Voor nu gebruiken we Firebase als bron van waarheid
-                        if (useFirebase) {
-                            if (typeof firebaseValue === 'object') {
-                                localStorage.setItem(userPrefix + key, JSON.stringify(firebaseValue));
-                            } else {
-                                localStorage.setItem(userPrefix + key, firebaseValue);
-                            }
-                            this.log(`SYNC: Firebase → Local for ${key} (Both had data, using Firebase)`);
-                            syncedItems++;
-                        }
+                        localStorage.setItem(userPrefix + key, JSON.stringify(firebaseData));
+                        this.log(`Sync: Firebase → Local for ${key} (conflict resolution)`);
+                        syncedItems++;
                     } catch (e) {
-                        console.error(`[FirebaseStorage] Error resolving conflict for ${key}:`, e);
+                        console.error(`Error resolving conflict for ${key}:`, e);
                     }
                 }
             } catch (e) {
-                console.error(`[FirebaseStorage] Error syncing ${key}:`, e);
+                console.error(`Error syncing ${key}:`, e);
             }
         }
         
-        console.log(`[FirebaseStorage] Sync completed: ${syncedItems} items synchronized`);
+        this.log(`Sync completed: ${syncedItems} items synchronized`);
         return syncedItems > 0;
     }
 };
