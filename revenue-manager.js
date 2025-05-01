@@ -302,13 +302,14 @@ const revenueManager = {
     
     // Get revenue data by year
     getRevenueDataByYear: function(year) {
-        // Get revenue data from localStorage
+        // Get revenue data from user-specific storage
         let revenue = [];
         try {
-            revenue = JSON.parse(localStorage.getItem('revenue') || '[]');
+            // Use userStorage instead of direct localStorage
+            revenue = userStorage.getJSON('revenue', []);
             if (!Array.isArray(revenue)) revenue = [];
         } catch (e) {
-            console.error('Error loading revenue from localStorage:', e);
+            console.error('Error loading revenue from user storage:', e);
             revenue = [];
         }
         
@@ -385,13 +386,14 @@ const revenueManager = {
     addRevenue: function(invoiceId, amount, date) {
         console.log('Adding revenue for invoice:', invoiceId, 'amount:', amount);
         
-        // Get revenue data from localStorage
+        // Get revenue data from user-specific storage
         let revenue = [];
         try {
-            revenue = JSON.parse(localStorage.getItem('revenue') || '[]');
+            // Use userStorage instead of direct localStorage
+            revenue = userStorage.getJSON('revenue', []);
             if (!Array.isArray(revenue)) revenue = [];
         } catch (e) {
-            console.error('Error loading revenue from localStorage:', e);
+            console.error('Error loading revenue from user storage:', e);
             revenue = [];
         }
         
@@ -416,12 +418,13 @@ const revenueManager = {
         // Add to revenue array
         revenue.push(newRevenue);
         
-        // Save to localStorage
+        // Save to user-specific storage
         try {
-            localStorage.setItem('revenue', JSON.stringify(revenue));
-            console.log('Revenue saved to localStorage successfully');
+            // Use userStorage instead of direct localStorage
+            userStorage.setJSON('revenue', revenue);
+            console.log('Revenue saved to user storage successfully');
         } catch (e) {
-            console.error('Error saving revenue to localStorage:', e);
+            console.error('Error saving revenue to user storage:', e);
         }
         
         // Update revenue stats
@@ -442,15 +445,23 @@ const revenueManager = {
 
 // Initialize revenue manager when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Wacht een korte tijd om ervoor te zorgen dat alle andere scripts zijn geladen
-    setTimeout(() => {
+    // Wait a short time to ensure all other scripts are loaded
+    setTimeout(function() {
+        // Check if we need to migrate existing revenue data
+        if (typeof userStorage !== 'undefined') {
+            // Migrate revenue data from global to user-specific storage
+            userStorage.migrateData(['revenue']);
+        } else {
+            console.error('userStorage module not found, cannot migrate revenue data');
+        }
+        
         console.log('Revenue manager initializing from DOMContentLoaded event');
         if (typeof revenueManager !== 'undefined') {
             revenueManager.init();
         } else {
             console.error('Revenue manager is not defined');
         }
-    }, 300);
+    }, 500);
 });
 
 // Zorg ervoor dat de revenue manager ook wordt geïnitialiseerd als de pagina al is geladen
