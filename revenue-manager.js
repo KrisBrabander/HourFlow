@@ -302,17 +302,12 @@ const revenueManager = {
     
     // Get revenue data by year
     getRevenueDataByYear: function(year) {
-        // Get revenue data from user-specific storage
         let revenue = [];
         try {
-            // Use userStorage if available, otherwise fallback to localStorage
-            if (typeof userStorage !== 'undefined') {
-                revenue = userStorage.getJSON('revenue', []);
-                console.log('Revenue data loaded from userStorage:', revenue.length);
-            } else {
-                revenue = JSON.parse(localStorage.getItem('revenue') || '[]');
-                console.log('Revenue data loaded from localStorage:', revenue.length);
-            }
+            // Direct gebruik van localStorage voor eenvoud en betrouwbaarheid
+            revenue = JSON.parse(localStorage.getItem('revenue') || '[]');
+            console.log('Revenue data loaded:', revenue.length);
+            
             if (!Array.isArray(revenue)) revenue = [];
         } catch (e) {
             console.error('Error loading revenue data:', e);
@@ -390,19 +385,12 @@ const revenueManager = {
     
     // Add revenue
     addRevenue: function(invoiceId, amount, date) {
-        console.log('Adding revenue for invoice:', invoiceId, 'amount:', amount);
-        
-        // Get revenue data from user-specific storage
         let revenue = [];
         try {
-            // Use userStorage if available, otherwise fallback to localStorage
-            if (typeof userStorage !== 'undefined') {
-                revenue = userStorage.getJSON('revenue', []);
-                console.log('Revenue data loaded from userStorage for adding:', revenue.length);
-            } else {
-                revenue = JSON.parse(localStorage.getItem('revenue') || '[]');
-                console.log('Revenue data loaded from localStorage for adding:', revenue.length);
-            }
+            // Direct gebruik van localStorage voor eenvoud en betrouwbaarheid
+            revenue = JSON.parse(localStorage.getItem('revenue') || '[]');
+            console.log('Revenue data loaded for adding:', revenue.length);
+            
             if (!Array.isArray(revenue)) revenue = [];
         } catch (e) {
             console.error('Error loading revenue data for adding:', e);
